@@ -1,0 +1,25 @@
+<filehub>
+    <storages>
+        <storage id="S3-Test" type="AWS_S3">
+            <region>us-east-2</region>
+            <secretKeyId>G5FD1G66RDGFGE1</secretKeyId>
+            <secretKey>6F51E6f1e651fds1ff161F61fd51s1F</secretKey>
+            <bucket>test</bucket>
+        </storage>
+        <storage id="FileSystem-Test" type="FILE_SYSTEM">
+            <baseDir>C:\Users\user\filehub</baseDir>
+        </storage>
+    </storages>
+    <schemas>
+        <schema name="S3-Only">
+            <storage-id>S3-Test</storage-id>
+        </schema>
+        <schema name="FileSystem-Only">
+            <storage-id>FileSystem-Test</storage-id>
+        </schema>
+        <schema name="S3-And-FileSystem" middle="S3-Test">
+            <storage-id>FileSystem-Test</storage-id>
+            <storage-id>S3-Test</storage-id>
+        </schema>
+    </schemas>
+</filehub>
