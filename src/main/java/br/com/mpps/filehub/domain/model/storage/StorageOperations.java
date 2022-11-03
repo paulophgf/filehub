@@ -6,6 +6,7 @@ import br.com.mpps.filehub.domain.model.config.Storage;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 
@@ -16,6 +17,8 @@ public interface StorageOperations {
     boolean deleteDirectory(String path, boolean isRecursive);
 
     List<FileItem> listFiles(String pathDir);
+
+    boolean existsDirectory(String pathDir);
 
 
     void upload(String pathDir, MultipartFile[] files, Boolean mkdir);
@@ -34,6 +37,6 @@ public interface StorageOperations {
 
     String getContentType(String filePath);
 
-    byte[] downloadFile(String pathDir) throws IOException;
+    InputStream downloadFile(String pathDir) throws IOException;
 
 }

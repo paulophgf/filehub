@@ -1,5 +1,6 @@
 package br.com.mpps.filehub.domain.model.storage.s3;
 
+import br.com.mpps.filehub.domain.exceptions.DownloadException;
 import br.com.mpps.filehub.domain.exceptions.StorageException;
 import br.com.mpps.filehub.domain.exceptions.UploadException;
 import br.com.mpps.filehub.domain.model.Base64Upload;
@@ -12,12 +13,10 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.*;
+import com.amazonaws.util.IOUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -33,9 +32,9 @@ public class S3Storage extends Storage<S3Properties> {
 
     @Override
     public boolean createDirectory(String directory) {
+        AmazonS3 s3Client = authorizeOnS3();
         String pathDir = S3Storage.formatDirPathToS3(directory);
-        if(!existsFile(pathDir)) {
-            AmazonS3 s3Client = authorizeOnS3();
+        if(!s3Client.doesObjectExist(properties.getBucket(), pathDir)) {
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentLength(0);
             InputStream emptyContent = new ByteArrayInputStream(new byte[0]);
@@ -79,6 +78,13 @@ public class S3Storage extends Storage<S3Properties> {
         return fileItems;
     }
 
+    @Override
+    public boolean existsDirectory(String path) {
+        AmazonS3 s3Client = authorizeOnS3();
+        String pathDir = S3Storage.formatDirPathToS3(path);
+        return s3Client.doesObjectExist(properties.getBucket(), pathDir);
+    }
+
 
     // Files Operations
 
@@ -118,32 +124,35 @@ public class S3Storage extends Storage<S3Properties> {
     }
 
     @Override
-    public OutputStream getOutputStreamFromStorage(String pathDir, String filename, Boolean mkdir) throws IOException {
-        //TODO Impl
-        return null;
+    public OutputStream getOutputStreamFromStorage(String path, String filename, Boolean mkdir) {
+        AmazonS3 s3Client = authorizeOnS3();
+        String pathDir = S3Storage.formatDirPathToS3(path);
+        checkIfFolderExists(s3Client, pathDir, mkdir);
+        String keyfile = pathDir + filename;
+        return new S3OutputStream(s3Client, properties.getBucket(), keyfile);
     }
 
     @Override
-    public boolean existsFile(String filePath) {
+    public boolean existsFile(String path) {
         AmazonS3 s3Client = authorizeOnS3();
+        String filePath = formatFilePathToS3(path);
         return s3Client.doesObjectExist(properties.getBucket(), filePath);
     }
 
     @Override
-    public String getContentType(String filePath) {
+    public String getContentType(String path) {
         AmazonS3 s3Client = authorizeOnS3();
+        String filePath = formatFilePathToS3(path);
         return s3Client.getObjectMetadata(properties.getBucket(), filePath).getContentType();
     }
 
     @Override
     public boolean delete(String path) {
-        if(path.startsWith("/")) {
-            path = path.substring(1);
-        }
+        String filePath = formatFilePathToS3(path);
         AmazonS3 s3Client = authorizeOnS3();
-        ObjectListing listing = s3Client.listObjects(properties.getBucket(), path);
+        ObjectListing listing = s3Client.listObjects(properties.getBucket(), filePath);
         if (listing.getCommonPrefixes().isEmpty()) {
-            s3Client.deleteObject(new DeleteObjectRequest(properties.getBucket(), path));
+            s3Client.deleteObject(new DeleteObjectRequest(properties.getBucket(), filePath));
         }
         return true;
     }
@@ -151,14 +160,36 @@ public class S3Storage extends Storage<S3Properties> {
 
 
     @Override
-    public byte[] downloadFile(String pathDir) {
-        //TODO Impl
-        return new byte[0];
+    public InputStream downloadFile(String path) throws IOException {
+        AmazonS3 s3Client = authorizeOnS3();
+        if(!s3Client.doesBucketExist(properties.getBucket())) {
+            throw new DownloadException("AWS S3 Bucket not found");
+        }
+        String filePath = formatFilePathToS3(path);
+        S3Object fileObject = s3Client.getObject(properties.getBucket(), filePath);
+        return fileObject.getObjectContent();
     }
 
     @Override
     public void transfer(Storage destination, String pathDir, List<String> filenames, Boolean mkdir) {
-        //TODO Impl
+        AmazonS3 s3Client = authorizeOnS3();
+        if(!s3Client.doesBucketExist(properties.getBucket())) {
+            throw new DownloadException("AWS S3 Bucket not found");
+        }
+        String filePath = formatDirPathToS3(pathDir);
+        for(String filename : filenames) {
+            int readByteCount;
+            byte[] buffer = new byte[4096];
+            S3Object fileObject = s3Client.getObject(properties.getBucket(), filePath);
+            try(InputStream in = fileObject.getObjectContent();
+                OutputStream out = destination.getOutputStreamFromStorage(pathDir, filename, mkdir)) {
+                while((readByteCount = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, readByteCount);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("Error to transfer the file " + filename, e);
+            }
+        }
     }
 
 
@@ -187,11 +218,16 @@ public class S3Storage extends Storage<S3Properties> {
     }
 
     private static String formatDirPathToS3(String path) {
-        if(path.startsWith("/")) {
-            path = path.substring(1);
-        }
+        path = formatFilePathToS3(path);
         if(!path.endsWith("/")) {
             path += "/";
+        }
+        return path;
+    }
+
+    private static String formatFilePathToS3(String path) {
+        if(path.startsWith("/")) {
+            path = path.substring(1);
         }
         return path;
     }

@@ -37,4 +37,10 @@ public class DirectoryManager {
         return firstStorage.listFiles(path);
     }
 
+    public boolean existsDirectory(Schema schema, String path) {
+        Collection<Storage> storages = schema.getStorages();
+        Storage firstStorage = storages.stream().findFirst().get();
+        return firstStorage.existsDirectory(path);
+    }
+
 }

@@ -1,9 +1,6 @@
 package br.com.mpps.filehub.system;
 
-import br.com.mpps.filehub.domain.exceptions.NotFoundException;
-import br.com.mpps.filehub.domain.exceptions.StorageException;
-import br.com.mpps.filehub.domain.exceptions.TriggerAuthenticationException;
-import br.com.mpps.filehub.domain.exceptions.UploadException;
+import br.com.mpps.filehub.domain.exceptions.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +32,12 @@ public class ResponseExceptionHandler {
     @ExceptionHandler(UploadException.class)
     public ResponseEntity<String> uploadException(UploadException e) {
         log.error(e.getMessage(), e.getCause());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(DownloadException.class)
+    public ResponseEntity<String> downloadException(DownloadException e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
     }
 

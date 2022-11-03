@@ -57,4 +57,13 @@ public class DirectoryController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping(value = "/schema/{schema}/dir/exists")
+    public ResponseEntity exists(HttpServletRequest request,
+                                 @PathVariable("schema") String schemaId,
+                                 @RequestParam("path") String originalPath) {
+        Schema schema = StorageReader.getStoragesBySchema(schemaId);
+        String path = triggerAuthenticationService.getPath(request, schema, originalPath, false);
+        return directoryManager.existsDirectory(schema, path) ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
+    }
+
 }

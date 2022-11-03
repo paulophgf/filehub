@@ -1,5 +1,6 @@
 package br.com.mpps.filehub.domain.model.storage.filesystem;
 
+import br.com.mpps.filehub.domain.exceptions.DownloadException;
 import br.com.mpps.filehub.domain.exceptions.StorageException;
 import br.com.mpps.filehub.domain.exceptions.UploadException;
 import br.com.mpps.filehub.domain.model.Base64Upload;
@@ -78,13 +79,19 @@ public class FileSystemStorage extends Storage<FileSystemProperties> {
         return fileItems;
     }
 
+    @Override
+    public boolean existsDirectory(String pathDir) {
+        File file = new File(formatFilePath(pathDir));
+        return file.exists() && file.isDirectory();
+    }
+
 
     // Files Operations
 
     @Override
     public void upload(String pathDir, MultipartFile[] files, Boolean mkdir) {
         String filePath = formatFilePath(pathDir);
-        checkIfFolderExists(filePath, pathDir, mkdir);
+        checkIfFolderExists(pathDir, mkdir);
         for(MultipartFile file : files) {
             Path filepath = Paths.get(filePath, file.getOriginalFilename());
             createFileIfNotExists(filepath);
@@ -105,7 +112,7 @@ public class FileSystemStorage extends Storage<FileSystemProperties> {
     @Override
     public void uploadBase64(String pathDir, Base64Upload[] files, Boolean mkdir) {
         String filePath = formatFilePath(pathDir);
-        checkIfFolderExists(filePath, pathDir, mkdir);
+        checkIfFolderExists(pathDir, mkdir);
         for(Base64Upload file : files) {
             Base64File base64File = file.getBase64();
             byte[] decodedImg = Base64.getDecoder().decode(base64File.getFile().getBytes(StandardCharsets.UTF_8));
@@ -121,15 +128,16 @@ public class FileSystemStorage extends Storage<FileSystemProperties> {
     @Override
     public OutputStream getOutputStreamFromStorage(String pathDir, String filename, Boolean mkdir) throws IOException {
         String filePath = formatFilePath(pathDir);
-        checkIfFolderExists(filePath, pathDir, mkdir);
+        checkIfFolderExists(pathDir, mkdir);
         Path filepath = Paths.get(filePath, filename);
         createFileIfNotExists(filepath);
         return new FileOutputStream(filepath.toFile());
     }
 
     @Override
-    public boolean existsFile(String filePath) {
-        return new File(formatFilePath(filePath)).exists();
+    public boolean existsFile(String path) {
+        File file = new File(formatFilePath(path));
+        return file.exists() && !file.isDirectory();
     }
 
     @Override
@@ -153,9 +161,9 @@ public class FileSystemStorage extends Storage<FileSystemProperties> {
 
 
     @Override
-    public byte[] downloadFile(String filePath) throws IOException {
+    public InputStream downloadFile(String filePath) throws IOException {
         File file = new File(formatFilePath(filePath));
-        return FileUtils.readFileToByteArray(file);
+        return FileUtils.openInputStream(file);
     }
 
     @Override
@@ -188,12 +196,12 @@ public class FileSystemStorage extends Storage<FileSystemProperties> {
         }
     }
 
-    private void checkIfFolderExists(String filepath, String pathDir, Boolean mkdir) {
-        if(!existsFile(pathDir)) {
+    private void checkIfFolderExists(String pathDir, Boolean mkdir) {
+        if(!existsDirectory(pathDir)) {
             if(!mkdir) {
                 throw new StorageException("Directory not found: " + pathDir);
             }
-            createDirectory(filepath);
+            createDirectory(pathDir);
         }
     }
 

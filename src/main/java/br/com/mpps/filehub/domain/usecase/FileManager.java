@@ -62,10 +62,18 @@ public class FileManager {
     }
 
 
-    public byte[] downloadFile(Schema schema, String filePath) throws IOException {
+    public InputStream downloadFile(Schema schema, String filePath) throws IOException {
         Collection<Storage> storages = schema.getStorages();
         Storage firstStorage = storages.stream().findFirst().get();
         return firstStorage.downloadFile(filePath);
+    }
+
+    public void copy(InputStream source, OutputStream target) throws IOException {
+        byte[] buf = new byte[8192];
+        int length;
+        while ((length = source.read(buf)) != -1) {
+            target.write(buf, 0, length);
+        }
     }
 
 

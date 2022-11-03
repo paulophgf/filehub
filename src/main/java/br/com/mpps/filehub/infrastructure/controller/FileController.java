@@ -1,9 +1,10 @@
 package br.com.mpps.filehub.infrastructure.controller;
 
+import br.com.mpps.filehub.domain.exceptions.NotFoundException;
 import br.com.mpps.filehub.domain.model.Base64Upload;
 import br.com.mpps.filehub.domain.model.config.Schema;
-import br.com.mpps.filehub.domain.usecase.TriggerAuthenticationService;
 import br.com.mpps.filehub.domain.usecase.FileManager;
+import br.com.mpps.filehub.domain.usecase.TriggerAuthenticationService;
 import br.com.mpps.filehub.infrastructure.config.StorageReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -12,8 +13,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 
 @RestController
 public class FileController {
@@ -55,28 +56,37 @@ public class FileController {
     }
 
     @DeleteMapping(value = "/schema/{schema}/file")
-    public ResponseEntity<Boolean> delete(HttpServletRequest request,
-                                          @PathVariable("schema") String schemaId,
-                                          @RequestParam("path") String originalPath) {
+    public ResponseEntity delete(HttpServletRequest request,
+                                 @PathVariable("schema") String schemaId,
+                                 @RequestParam("path") String originalPath) {
         Schema schema = StorageReader.getStoragesBySchema(schemaId);
         String path = triggerAuthenticationService.getPath(request, schema, originalPath, false);
-        Boolean result = fileManager.delete(schema, path);
-        return ResponseEntity.ok(result);
+        fileManager.delete(schema, path);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/schema/{schema}/file/**")
     public void downloadFile(@PathVariable("schema") String schemaId,
                          HttpServletRequest request, HttpServletResponse response) throws IOException {
         Schema schema = StorageReader.getStoragesBySchema(schemaId);
-        String originalPath = request.getRequestURI().replace("/schema/" + schemaId + "/file/", "");
+        String originalPath = request.getRequestURI().replace("/schema/" + schemaId + "/file/", "/");
         String path = triggerAuthenticationService.getPath(request, schema, originalPath, false);
         if(!fileManager.existsFile(schema, path)) {
-            throw new FileNotFoundException();
+            throw new NotFoundException("Not found: " + path);
         }
         String contentType = fileManager.getContentType(schema, path);
-        byte[] byteArray = fileManager.downloadFile(schema, path);
+        InputStream inputStream = fileManager.downloadFile(schema, path);
         response.setContentType(contentType);
-        response.getOutputStream().write(byteArray);
+        fileManager.copy(inputStream, response.getOutputStream());
+    }
+
+    @GetMapping(value = "/schema/{schema}/file/exists")
+    public ResponseEntity exists(HttpServletRequest request,
+                                 @PathVariable("schema") String schemaId,
+                                 @RequestParam("path") String originalPath) {
+        Schema schema = StorageReader.getStoragesBySchema(schemaId);
+        String path = triggerAuthenticationService.getPath(request, schema, originalPath, false);
+        return fileManager.existsFile(schema, path) ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
     }
 
 }
