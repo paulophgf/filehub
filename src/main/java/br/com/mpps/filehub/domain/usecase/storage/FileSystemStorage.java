@@ -1,13 +1,15 @@
-package br.com.mpps.filehub.domain.model.storage.filesystem;
+package br.com.mpps.filehub.domain.usecase.storage;
 
-import br.com.mpps.filehub.domain.exceptions.DownloadException;
 import br.com.mpps.filehub.domain.exceptions.StorageException;
 import br.com.mpps.filehub.domain.exceptions.UploadException;
 import br.com.mpps.filehub.domain.model.Base64Upload;
 import br.com.mpps.filehub.domain.model.FileItem;
+import br.com.mpps.filehub.domain.model.FileLocation;
+import br.com.mpps.filehub.domain.model.FileMetadata;
 import br.com.mpps.filehub.domain.model.config.Storage;
 import br.com.mpps.filehub.domain.model.storage.Base64File;
 import br.com.mpps.filehub.domain.model.storage.EnumStorageType;
+import br.com.mpps.filehub.domain.model.storage.filesystem.FileSystemProperties;
 import org.apache.commons.io.FileUtils;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -86,27 +88,50 @@ public class FileSystemStorage extends Storage<FileSystemProperties> {
     }
 
 
+
+
     // Files Operations
+
+    @Override
+    public void upload(FileLocation fileLocation, MultipartFile file, Boolean mkdir) {
+        String filePath = formatFilePath(fileLocation.getPath());
+        checkIfFolderExists(fileLocation.getPath(), mkdir);
+        executeUpdateMultipart(filePath, file, fileLocation.getFilename());
+    }
 
     @Override
     public void upload(String pathDir, MultipartFile[] files, Boolean mkdir) {
         String filePath = formatFilePath(pathDir);
         checkIfFolderExists(pathDir, mkdir);
         for(MultipartFile file : files) {
-            Path filepath = Paths.get(filePath, file.getOriginalFilename());
-            createFileIfNotExists(filepath);
-            int readByteCount;
-            byte[] buffer = new byte[4096];
-
-            try(InputStream in = file.getInputStream();
-                OutputStream out = new FileOutputStream(filepath.toFile())) {
-                while((readByteCount = in.read(buffer)) != -1) {
-                    out.write(buffer, 0, readByteCount);
-                }
-            } catch (IOException e) {
-                throw new UploadException("Error to upload the file " + file.getName(), e);
-            }
+            executeUpdateMultipart(filePath, file, file.getOriginalFilename());
         }
+    }
+
+    private void executeUpdateMultipart(String filePath, MultipartFile file, String filename) {
+        Path filepath = Paths.get(filePath, filename);
+        createFileIfNotExists(filepath);
+        int readByteCount;
+        byte[] buffer = new byte[4096];
+
+        try(InputStream in = file.getInputStream();
+            OutputStream out = new FileOutputStream(filepath.toFile())) {
+            while((readByteCount = in.read(buffer)) != -1) {
+                out.write(buffer, 0, readByteCount);
+            }
+        } catch (IOException e) {
+            throw new UploadException("Error to upload the file " + filename, e);
+        }
+    }
+
+
+    @Override
+    public void uploadBase64(FileLocation fileLocation, Base64Upload file, Boolean mkdir) {
+        String filePath = formatFilePath(fileLocation.getPath());
+        checkIfFolderExists(fileLocation.getPath(), mkdir);
+        Base64File base64File = file.getBase64();
+        fileLocation.setFilename(file.getFilename());
+        executeUpdateBase64(base64File, filePath, fileLocation.getFilename());
     }
 
     @Override
@@ -115,15 +140,20 @@ public class FileSystemStorage extends Storage<FileSystemProperties> {
         checkIfFolderExists(pathDir, mkdir);
         for(Base64Upload file : files) {
             Base64File base64File = file.getBase64();
-            byte[] decodedImg = Base64.getDecoder().decode(base64File.getFile().getBytes(StandardCharsets.UTF_8));
-            Path destinationFile = Paths.get(filePath, base64File.getFilename());
-            try {
-                Files.write(destinationFile, decodedImg);
-            } catch (IOException e) {
-                throw new UploadException("Error to upload the file " + file.getFilename(), e);
-            }
+            executeUpdateBase64(base64File, filePath, file.getFilename());
         }
     }
+
+    private void executeUpdateBase64(Base64File base64File, String filePath, String filename) {
+        byte[] decodedImg = Base64.getDecoder().decode(base64File.getFile().getBytes(StandardCharsets.UTF_8));
+        Path destinationFile = Paths.get(filePath, base64File.getFilename());
+        try {
+            Files.write(destinationFile, decodedImg);
+        } catch (IOException e) {
+            throw new UploadException("Error to upload the file " + filename, e);
+        }
+    }
+
 
     @Override
     public OutputStream getOutputStreamFromStorage(String pathDir, String filename, Boolean mkdir) throws IOException {
@@ -134,6 +164,35 @@ public class FileSystemStorage extends Storage<FileSystemProperties> {
         return new FileOutputStream(filepath.toFile());
     }
 
+
+    @Override
+    public void transfer(Storage destination, FileLocation fileLocation, Boolean mkdir) {
+        String filePath = formatFilePath(fileLocation.getPath());
+        executeTransfer(destination, fileLocation.getPath(), filePath, fileLocation.getFilename(), mkdir);
+    }
+
+    @Override
+    public void transfer(Storage destination, String pathDir, List<String> filenames, Boolean mkdir) {
+        String filePath = formatFilePath(pathDir);
+        for(String filename : filenames) {
+            executeTransfer(destination, pathDir, filePath, filename, mkdir);
+        }
+    }
+
+    private void executeTransfer(Storage destination, String pathDir, String filePath, String filename, boolean mkdir) {
+        int readByteCount;
+        byte[] buffer = new byte[4096];
+        try(InputStream in = new FileInputStream(filePath + filename);
+            OutputStream out = destination.getOutputStreamFromStorage(pathDir, filename, mkdir)) {
+            while((readByteCount = in.read(buffer)) != -1) {
+                out.write(buffer, 0, readByteCount);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Error to transfer the file " + filename, e);
+        }
+    }
+
+
     @Override
     public boolean existsFile(String path) {
         File file = new File(formatFilePath(path));
@@ -141,9 +200,14 @@ public class FileSystemStorage extends Storage<FileSystemProperties> {
     }
 
     @Override
-    public String getContentType(String filePath) {
+    public FileMetadata getFileDetails(String filePath) {
         File file = new File(formatFilePath(filePath));
-        return URLConnection.guessContentTypeFromName(file.getName());
+        String contentType = URLConnection.guessContentTypeFromName(file.getName());
+        FileMetadata fileMetadata = new FileMetadata();
+        fileMetadata.setContentType(contentType);
+        fileMetadata.setSize(file.length());
+        fileMetadata.setLastModified(file.lastModified());
+        return fileMetadata;
     }
 
     @Override
@@ -164,23 +228,6 @@ public class FileSystemStorage extends Storage<FileSystemProperties> {
     public InputStream downloadFile(String filePath) throws IOException {
         File file = new File(formatFilePath(filePath));
         return FileUtils.openInputStream(file);
-    }
-
-    @Override
-    public void transfer(Storage destination, String pathDir, List<String> filenames, Boolean mkdir) {
-        String path = formatFilePath(pathDir);
-        for(String filename : filenames) {
-            int readByteCount;
-            byte[] buffer = new byte[4096];
-            try(InputStream in = new FileInputStream(path + filename);
-                OutputStream out = destination.getOutputStreamFromStorage(pathDir, filename, mkdir)) {
-                while((readByteCount = in.read(buffer)) != -1) {
-                    out.write(buffer, 0, readByteCount);
-                }
-            } catch (IOException e) {
-                throw new RuntimeException("Error to transfer the file " + filename, e);
-            }
-        }
     }
 
 

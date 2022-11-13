@@ -4,8 +4,8 @@ import br.com.mpps.filehub.domain.model.config.Storage;
 import br.com.mpps.filehub.domain.model.storage.filesystem.FileSystemProperties;
 import br.com.mpps.filehub.domain.model.storage.s3.S3Properties;
 import br.com.mpps.filehub.domain.exceptions.PropertiesReaderException;
-import br.com.mpps.filehub.domain.model.storage.filesystem.FileSystemStorage;
-import br.com.mpps.filehub.domain.model.storage.s3.S3Storage;
+import br.com.mpps.filehub.domain.usecase.storage.FileSystemStorage;
+import br.com.mpps.filehub.domain.usecase.storage.S3Storage;
 import lombok.Getter;
 
 @Getter

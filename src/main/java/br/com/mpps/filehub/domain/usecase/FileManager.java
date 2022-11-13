@@ -1,6 +1,8 @@
 package br.com.mpps.filehub.domain.usecase;
 
 import br.com.mpps.filehub.domain.exceptions.UploadException;
+import br.com.mpps.filehub.domain.model.FileLocation;
+import br.com.mpps.filehub.domain.model.FileMetadata;
 import br.com.mpps.filehub.domain.model.config.Schema;
 import br.com.mpps.filehub.domain.model.config.Storage;
 import br.com.mpps.filehub.domain.model.Base64Upload;
@@ -19,8 +21,14 @@ import java.util.stream.Collectors;
 @Service
 public class FileManager {
 
+    public void upload(Schema schema, FileLocation fileLocation, MultipartFile file, Boolean mkdir) {
+        log.info("UPLOAD SINGLE FILE USING MULTIPART FILE");
+        Collection<Storage> storages = schema.getStorages();
+        uploadSequential(storages, fileLocation, file, mkdir);
+    }
+
     public void upload(Schema schema, String path, MultipartFile[] files, Boolean mkdir, Boolean parallel) {
-        log.info("UPLOAD USING MULTIPART FILE");
+        log.info("UPLOAD MULTIPLE FILE USING MULTIPART FILE");
         Collection<Storage> storages = schema.getStorages();
         if(parallel) {
             uploadParallel(storages, path, files, mkdir);
@@ -29,8 +37,16 @@ public class FileManager {
         }
     }
 
+    public void uploadBase64(Schema schema, FileLocation fileLocation, Base64Upload file, Boolean mkdir) {
+        log.info("UPLOAD SINGLE FILE USING BASE 64 FILE");
+        Collection<Storage> storages = schema.getStorages();
+        for(Storage storage : storages) {
+            storage.uploadBase64(fileLocation, file, mkdir);
+        }
+    }
+
     public void uploadBase64(Schema schema, String path, Base64Upload[] files, Boolean mkdir) {
-        log.info("UPLOAD USING BASE 64 FILE");
+        log.info("UPLOAD MULTIPLE FILE USING BASE 64 FILE");
         Collection<Storage> storages = schema.getStorages();
         for(Storage storage : storages) {
             storage.uploadBase64(path, files, mkdir);
@@ -58,7 +74,14 @@ public class FileManager {
     public String getContentType(Schema schema, String filePath) {
         Collection<Storage> storages = schema.getStorages();
         Storage firstStorage = storages.stream().findFirst().get();
-        return firstStorage.getContentType(filePath);
+        return firstStorage.getFileDetails(filePath).getContentType();
+    }
+
+
+    public FileMetadata getDetails(Schema schema, String filePath) {
+        Collection<Storage> storages = schema.getStorages();
+        Storage firstStorage = storages.stream().findFirst().get();
+        return firstStorage.getFileDetails(filePath);
     }
 
 
@@ -69,10 +92,17 @@ public class FileManager {
     }
 
     public void copy(InputStream source, OutputStream target) throws IOException {
-        byte[] buf = new byte[8192];
-        int length;
-        while ((length = source.read(buf)) != -1) {
-            target.write(buf, 0, length);
+        try {
+            byte[] buf = new byte[8192];
+            int length;
+            while ((length = source.read(buf)) != -1) {
+                target.write(buf, 0, length);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Download problem");
+        } finally {
+            source.close();
+            target.close();
         }
     }
 
@@ -94,6 +124,24 @@ public class FileManager {
         } else {
             for (Storage storage : storages) {
                 storage.upload(path, files, mkdir);
+            }
+        }
+    }
+
+    private void uploadSequential(Collection<Storage> storages, FileLocation fileLocation, MultipartFile file, Boolean mkdir) {
+        Storage firstStorage = storages.stream().findFirst().get();
+        if(EnumStorageType.MIDDLE.equals(firstStorage.getType())) {
+            log.info("MIDDLE MODE");
+            firstStorage.upload(fileLocation, file, mkdir);
+            new Thread(() -> {
+                storages.remove(firstStorage);
+                for (Storage storage : storages) {
+                    firstStorage.transfer(storage, fileLocation, mkdir);
+                }
+            }).start();
+        } else {
+            for (Storage storage : storages) {
+                storage.upload(fileLocation, file, mkdir);
             }
         }
     }

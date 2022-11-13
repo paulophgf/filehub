@@ -1,6 +1,7 @@
 package br.com.mpps.filehub.infrastructure.controller;
 
 import br.com.mpps.filehub.domain.model.FileItem;
+import br.com.mpps.filehub.domain.model.FileLocation;
 import br.com.mpps.filehub.domain.model.config.Schema;
 import br.com.mpps.filehub.domain.usecase.DirectoryManager;
 import br.com.mpps.filehub.domain.usecase.TriggerAuthenticationService;
@@ -31,8 +32,8 @@ public class DirectoryController {
                                                    @PathVariable("schema") String schemaId,
                                                    @RequestParam("path") String originalPath) {
         Schema schema = StorageReader.getStoragesBySchema(schemaId);
-        String path = triggerAuthenticationService.getPath(request, schema, originalPath, false);
-        Boolean result = directoryManager.createDirectory(schema, path);
+        FileLocation fileLocation = triggerAuthenticationService.getFileLocation(request, schema, originalPath, false);
+        Boolean result = directoryManager.createDirectory(schema, fileLocation.getPath());
         return ResponseEntity.ok(result);
     }
 
@@ -42,8 +43,8 @@ public class DirectoryController {
                                           @RequestParam("path") String originalPath,
                                           @RequestParam(value = "recursively", required = false, defaultValue = "false") Boolean recursively) {
         Schema schema = StorageReader.getStoragesBySchema(schemaId);
-        String path = triggerAuthenticationService.getPath(request, schema, originalPath, false);
-        Boolean result = directoryManager.deleteDirectory(schema, path, recursively);
+        FileLocation fileLocation = triggerAuthenticationService.getFileLocation(request, schema, originalPath, false);
+        Boolean result = directoryManager.deleteDirectory(schema, fileLocation.getPath(), recursively);
         return ResponseEntity.ok(result);
     }
 
@@ -52,8 +53,8 @@ public class DirectoryController {
                                                     @PathVariable("schema") String schemaId,
                                                     @RequestParam("path") String originalPath) {
         Schema schema = StorageReader.getStoragesBySchema(schemaId);
-        String path = triggerAuthenticationService.getPath(request, schema, originalPath, false);
-        List<FileItem> result = directoryManager.listFiles(schema, path);
+        FileLocation fileLocation = triggerAuthenticationService.getFileLocation(request, schema, originalPath, false);
+        List<FileItem> result = directoryManager.listFiles(schema, fileLocation.getPath());
         return ResponseEntity.ok(result);
     }
 
@@ -62,8 +63,8 @@ public class DirectoryController {
                                  @PathVariable("schema") String schemaId,
                                  @RequestParam("path") String originalPath) {
         Schema schema = StorageReader.getStoragesBySchema(schemaId);
-        String path = triggerAuthenticationService.getPath(request, schema, originalPath, false);
-        return directoryManager.existsDirectory(schema, path) ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
+        FileLocation fileLocation = triggerAuthenticationService.getFileLocation(request, schema, originalPath, false);
+        return directoryManager.existsDirectory(schema, fileLocation.getPath()) ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
     }
 
 }

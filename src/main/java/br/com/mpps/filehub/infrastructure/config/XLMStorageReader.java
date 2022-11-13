@@ -1,14 +1,15 @@
 package br.com.mpps.filehub.infrastructure.config;
 
+import br.com.mpps.filehub.domain.exceptions.PropertiesReaderException;
 import br.com.mpps.filehub.domain.model.IgnoreProperty;
 import br.com.mpps.filehub.domain.model.config.Schema;
 import br.com.mpps.filehub.domain.model.config.Storage;
 import br.com.mpps.filehub.domain.model.config.Trigger;
-import br.com.mpps.filehub.domain.model.storage.EnumTriggerAction;
-import br.com.mpps.filehub.domain.model.storage.filesystem.FileSystemProperties;
-import br.com.mpps.filehub.domain.model.storage.StorageProperties;
-import br.com.mpps.filehub.domain.exceptions.PropertiesReaderException;
+import br.com.mpps.filehub.domain.model.storage.EnumHttpMethod;
 import br.com.mpps.filehub.domain.model.storage.EnumStorageType;
+import br.com.mpps.filehub.domain.model.storage.EnumTriggerAction;
+import br.com.mpps.filehub.domain.model.storage.StorageProperties;
+import br.com.mpps.filehub.domain.model.storage.filesystem.FileSystemProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -129,10 +130,13 @@ public class XLMStorageReader {
         trigger.setAction(triggerAction);
         String url = getSingleProperty(triggerElement, triggerId, "trigger", "url");
         String header = getSingleProperty(triggerElement, triggerId, "trigger", "header");
+        String httpMethod = getOptionalProperty(triggerElement, "http-method", "GET");
+        EnumHttpMethod triggerHttpMethod = EnumHttpMethod.get(httpMethod);
         urlValidation(triggerId, url);
         headerValidation(triggerId, header);
         trigger.setUrl(url);
         trigger.setHeader(header);
+        trigger.setHttpMethod(triggerHttpMethod);
         return trigger;
     }
 
@@ -272,6 +276,15 @@ public class XLMStorageReader {
             throw new PropertiesReaderException("The property " + propertyName + " not found in the " +  elementName + " " + elementId);
         }
         return properties.item(0).getTextContent();
+    }
+
+    private String getOptionalProperty(Element triggerElement, String propertyName, String defaultValue) {
+        NodeList properties = triggerElement.getElementsByTagName(propertyName);
+        String value = defaultValue;
+        if (properties.getLength() == 1) {
+            value = properties.item(0).getTextContent();
+        }
+        return value;
     }
 
     private void urlValidation(String triggerId, String url) {

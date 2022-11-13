@@ -1,6 +1,7 @@
 package br.com.mpps.filehub.domain.usecase;
 
 import br.com.mpps.filehub.domain.exceptions.TriggerAuthenticationException;
+import br.com.mpps.filehub.domain.model.FileLocation;
 import br.com.mpps.filehub.domain.model.config.Schema;
 import br.com.mpps.filehub.domain.model.config.Trigger;
 import br.com.mpps.filehub.domain.model.storage.EnumTriggerAction;
@@ -12,7 +13,6 @@ import reactor.netty.http.client.HttpClient;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
-import java.util.Set;
 
 
 @Service
@@ -20,27 +20,28 @@ public class TriggerAuthenticationService {
 
     private static Gson gson = new Gson();
 
-    public String getPath(HttpServletRequest request, Schema schema, String path, Boolean isRead) {
-        String newPath = path;
+    public FileLocation getFileLocation(HttpServletRequest request, Schema schema, String path, Boolean isRead) {
+        FileLocation fileLocation = new FileLocation(path);
         if(schema.getTrigger() != null) {
-            if(schema.getTrigger().getAction().equals(EnumTriggerAction.ALL) ||
+            String headerValue = request.getHeader(schema.getTrigger().getHeader());
+            if(schema.getTrigger().getAction().equals(EnumTriggerAction.ALL) || headerValue != null ||
                     (schema.getTrigger().getAction().equals(EnumTriggerAction.UPDATE) && !isRead)) {
-                String headerValue = request.getHeader(schema.getTrigger().getHeader());
                 if (headerValue == null) {
                     throw new TriggerAuthenticationException("Header " + schema.getTrigger().getHeader() + " was not found in the request");
                 }
                 HashMap<String, String> parameters = getParameters(schema.getTrigger(), headerValue);
-                newPath = replacePathParameters(path, parameters);
+                fileLocation.updateAttributesByTriggerParameters(parameters);
             }
         }
-        return newPath;
+        return fileLocation;
     }
 
     private HashMap<String, String> getParameters(Trigger trigger, String headerValue) {
         HttpClient client = HttpClient.create()
                         .headers(h -> h.set(trigger.getHeader(), headerValue));
+        HttpClient.ResponseReceiver<?> responseReceiver = trigger.getHttpMethod().getResponseReceiver(client);
 
-        Mono<HashMap> parameters = client.get()
+        Mono<HashMap> parameters = responseReceiver
                 .uri(trigger.getUrl())
                 .responseSingle(
                         (response, bytes) -> {
@@ -57,22 +58,6 @@ public class TriggerAuthenticationService {
                         }
                 );
         return parameters.block();
-    }
-
-    private String replacePathParameters(String path, HashMap<String, String> parameters) {
-        if(!parameters.isEmpty()) {
-            Set<String> parameterNames = parameters.keySet();
-            for(String parameterName : parameterNames) {
-                if(path.lastIndexOf("$"+parameterName) == -1) {
-                    throw new TriggerAuthenticationException("The parameter $" + parameterName + " was not found in the path");
-                }
-                if(parameters.get(parameterName).isEmpty()) {
-                    throw new TriggerAuthenticationException("The trigger returned an empty value to parameter $" + parameterName);
-                }
-                path = path.replace("$"+parameterName, parameters.get(parameterName));
-            }
-        }
-        return path;
     }
 
 }
