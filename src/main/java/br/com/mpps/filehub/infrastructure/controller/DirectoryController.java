@@ -40,9 +40,9 @@ public class DirectoryController {
     })
     @PostMapping(value = "/schema/{schema}/dir")
     public ResponseEntity<Boolean> createDirectory(HttpServletRequest request,
-                                                   @ApiParam("Schema name (created at XLM configuration file)")
+                                                   @ApiParam(value = "Schema name (created at XLM configuration file)", required = true)
                                                    @PathVariable("schema") String schemaId,
-                                                   @ApiParam("Directory path separated by slash character \" / \"")
+                                                   @ApiParam(value = "Directory path separated by slash character \" / \"", required = true)
                                                    @RequestParam("path") String path) {
         Schema schema = StorageReader.getStoragesBySchema(schemaId);
         FileLocation fileLocation = triggerAuthenticationService.getFileLocation(request, schema, path, false);
@@ -62,9 +62,9 @@ public class DirectoryController {
     })
     @DeleteMapping(value = "/schema/{schema}/dir")
     public ResponseEntity<Boolean> delete(HttpServletRequest request,
-                                          @ApiParam("Schema name (created at XLM configuration file)")
+                                          @ApiParam(value = "Schema name (created at XLM configuration file)", required = true)
                                           @PathVariable("schema") String schemaId,
-                                          @ApiParam("Directory path separated by slash character \" / \"")
+                                          @ApiParam(value = "Directory path separated by slash character \" / \"", required = true)
                                           @RequestParam("path") String path,
                                           @ApiParam(value = "TRUE: Will delete the directory and other directories inside it.\n" +
                                                   "FALSE: Just will delete the directory if it is empty", defaultValue = "false")
@@ -86,9 +86,9 @@ public class DirectoryController {
     })
     @GetMapping(value = "/schema/{schema}/dir")
     public ResponseEntity<List<FileItem>> listFiles(HttpServletRequest request,
-                                                    @ApiParam("Schema name (created at XLM configuration file)")
+                                                    @ApiParam(value = "Schema name (created at XLM configuration file)", required = true)
                                                     @PathVariable("schema") String schemaId,
-                                                    @ApiParam("Directory path separated by slash character \" / \"")
+                                                    @ApiParam(value = "Directory path separated by slash character \" / \"", required = true)
                                                     @RequestParam("path") String path) {
         Schema schema = StorageReader.getStoragesBySchema(schemaId);
         FileLocation fileLocation = triggerAuthenticationService.getFileLocation(request, schema, path, true);
@@ -108,9 +108,9 @@ public class DirectoryController {
     })
     @GetMapping(value = "/schema/{schema}/dir/exists")
     public ResponseEntity<Boolean> exists(HttpServletRequest request,
-                                 @ApiParam("Schema name (created at XLM configuration file)")
+                                 @ApiParam(value = "Schema name (created at XLM configuration file)", required = true)
                                  @PathVariable("schema") String schemaId,
-                                 @ApiParam("Directory path separated by slash character \" / \"")
+                                 @ApiParam(value = "Directory path separated by slash character \" / \"", required = true)
                                  @RequestParam("path") String path) {
         Schema schema = StorageReader.getStoragesBySchema(schemaId);
         FileLocation fileLocation = triggerAuthenticationService.getFileLocation(request, schema, path, false);

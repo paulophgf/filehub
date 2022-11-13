@@ -8,9 +8,11 @@ import br.com.mpps.filehub.infrastructure.config.StorageReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.ApiIgnore;
 
 import java.util.UUID;
 
+@ApiIgnore
 @RestController
 public class SynchronizationController {
 
@@ -21,7 +23,6 @@ public class SynchronizationController {
     public SynchronizationController(SynchronizationService synchronizationService) {
         this.synchronizationService = synchronizationService;
     }
-
 
     @PostMapping(value = "/synch/storage/{right}/{left}")
     public ResponseEntity<UUID> synchronizeSchema(@PathVariable("right") String rightId,
