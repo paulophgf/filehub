@@ -58,7 +58,7 @@ public class XLMStorageReader {
         NodeList triggerNodes = document.getElementsByTagName("trigger");
         Map<String, Trigger> triggers = readTriggers(triggerNodes);
         NodeList schemaNodes = document.getElementsByTagName("schema");
-        Map<String, Schema> schemas = readSchemas(schemaNodes, storages, triggers);
+        Map<String, Schema> schemas = readSchemas(schemaNodes, storages, triggers, false);
         return schemas;
     }
 
@@ -170,8 +170,8 @@ public class XLMStorageReader {
         return result;
     }
 
-    private Map<String, Schema> readSchemas(NodeList nodes, Map<String, Storage> storages, Map<String, Trigger> triggers) {
-        Map<String, Schema> schemas = createSchemaMapIncludingDefaultStorages(storages);
+    private Map<String, Schema> readSchemas(NodeList nodes, Map<String, Storage> storages, Map<String, Trigger> triggers, boolean includeDefault) {
+        Map<String, Schema> schemas = includeDefault ? createSchemaMapIncludingDefaultStorages(storages) : new LinkedHashMap<>();
         for(int i=0; i<nodes.getLength(); i++) {
             Node schemaNode = nodes.item(i);
             if(schemaNode.getNodeType() != Node.ELEMENT_NODE) {
