@@ -29,7 +29,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
 
-public class XLMStorageReader {
+public class XMLStorageReader {
 
     public Map<String, Schema> read(String xmlContent) {
         Map<String, Schema> schemas = null;
@@ -58,7 +58,7 @@ public class XLMStorageReader {
         NodeList triggerNodes = document.getElementsByTagName("trigger");
         Map<String, Trigger> triggers = readTriggers(triggerNodes);
         NodeList schemaNodes = document.getElementsByTagName("schema");
-        Map<String, Schema> schemas = readSchemas(schemaNodes, storages, triggers, false);
+        Map<String, Schema> schemas = readSchemas(schemaNodes, storages, triggers, false); // FIXME Incluir uma nova propriedade no arquivo de configuração
         return schemas;
     }
 

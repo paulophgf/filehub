@@ -1,7 +1,8 @@
 1. Testar a flag de middle
 2. Criar documentação de operações
-4. Criar teste unitário para a classe TriggerAuthenticationService
-5. Criar teste para o atributo http-method da trigger
+3. Criar teste unitário para a classe TriggerAuthenticationService
+4. Criar teste para o atributo http-method da trigger
+5. Criar atributo para desativar a criação dos schemas default (atualizar documentação)
 
 
 Estão funcionando:

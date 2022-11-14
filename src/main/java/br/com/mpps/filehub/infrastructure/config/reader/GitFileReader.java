@@ -2,7 +2,7 @@ package br.com.mpps.filehub.infrastructure.config.reader;
 
 import br.com.mpps.filehub.domain.model.EnumConfigReaderType;
 import br.com.mpps.filehub.domain.model.config.Schema;
-import br.com.mpps.filehub.infrastructure.config.XLMStorageReader;
+import br.com.mpps.filehub.infrastructure.config.XMLStorageReader;
 import br.com.mpps.filehub.domain.interfaces.FileConfigReader;
 import br.com.mpps.filehub.domain.exceptions.PropertiesReaderException;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -41,9 +41,9 @@ public class GitFileReader implements FileConfigReader {
     @Override
     public Map<String, Schema> readSchemasFromConfigurationFile() {
         checkGitReaderParameters();
-        XLMStorageReader xlmStorageReader = new XLMStorageReader();
+        XMLStorageReader XMLStorageReader = new XMLStorageReader();
         String content = getConfigurationFileContent();
-        return xlmStorageReader.read(content);
+        return XMLStorageReader.read(content);
     }
 
     private void checkGitReaderParameters() {
