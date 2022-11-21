@@ -39,7 +39,7 @@ public class S3Storage extends Storage<S3Properties> {
     @Override
     public boolean createDirectory(String directory) {
         AmazonS3 s3Client = authorizeOnS3();
-        String pathDir = S3Storage.formatDirPathToS3(directory);
+        String pathDir = formatDirPathToS3(directory);
         if(!s3Client.doesObjectExist(properties.getBucket(), pathDir)) {
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentLength(0);
@@ -52,7 +52,7 @@ public class S3Storage extends Storage<S3Properties> {
 
     @Override
     public boolean deleteDirectory(String path, boolean isRecursive) {
-        String pathDir = S3Storage.formatDirPathToS3(path);
+        String pathDir = formatDirPathToS3(path);
         AmazonS3 s3Client = authorizeOnS3();
         ObjectListing listing = s3Client.listObjects(properties.getBucket(), pathDir);
         if (!listing.getCommonPrefixes().isEmpty()) {
@@ -68,7 +68,7 @@ public class S3Storage extends Storage<S3Properties> {
 
     @Override
     public List<FileItem> listFiles(String path) {
-        String pathDir = S3Storage.formatDirPathToS3(path);
+        String pathDir = formatDirPathToS3(path);
         List<FileItem> fileItems = null;
         AmazonS3 s3Client = authorizeOnS3();
         ObjectListing listing = s3Client.listObjects(properties.getBucket(), pathDir);
@@ -87,7 +87,7 @@ public class S3Storage extends Storage<S3Properties> {
     @Override
     public boolean existsDirectory(String path) {
         AmazonS3 s3Client = authorizeOnS3();
-        String pathDir = S3Storage.formatDirPathToS3(path);
+        String pathDir = formatDirPathToS3(path);
         return s3Client.doesObjectExist(properties.getBucket(), pathDir);
     }
 
@@ -97,7 +97,7 @@ public class S3Storage extends Storage<S3Properties> {
     @Override
     public void upload(FileLocation fileLocation, MultipartFile file, Boolean mkdir) {
         AmazonS3 s3Client = authorizeOnS3();
-        String pathDir = S3Storage.formatDirPathToS3(fileLocation.getPath());
+        String pathDir = formatDirPathToS3(fileLocation.getPath());
         checkIfFolderExists(s3Client, pathDir, mkdir);
         executeUploadMultipart(s3Client, file, pathDir, fileLocation.getFilename());
     }
@@ -105,7 +105,7 @@ public class S3Storage extends Storage<S3Properties> {
     @Override
     public void upload(String path, MultipartFile[] files, Boolean mkdir) {
         AmazonS3 s3Client = authorizeOnS3();
-        String pathDir = S3Storage.formatDirPathToS3(path);
+        String pathDir = formatDirPathToS3(path);
         checkIfFolderExists(s3Client, pathDir, mkdir);
         for(MultipartFile file : files) {
             executeUploadMultipart(s3Client, file, pathDir, file.getOriginalFilename());
@@ -129,7 +129,7 @@ public class S3Storage extends Storage<S3Properties> {
     @Override
     public void uploadBase64(FileLocation fileLocation, Base64Upload file, Boolean mkdir) {
         AmazonS3 s3Client = authorizeOnS3();
-        String pathDir = S3Storage.formatDirPathToS3(fileLocation.getPath());
+        String pathDir = formatDirPathToS3(fileLocation.getPath());
         checkIfFolderExists(s3Client, pathDir, mkdir);
         executeUploadBase64(s3Client, file, fileLocation.getFilename());
     }
@@ -137,7 +137,7 @@ public class S3Storage extends Storage<S3Properties> {
     @Override
     public void uploadBase64(String path, Base64Upload[] files, Boolean mkdir) {
         AmazonS3 s3Client = authorizeOnS3();
-        String pathDir = S3Storage.formatDirPathToS3(path);
+        String pathDir = formatDirPathToS3(path);
         checkIfFolderExists(s3Client, pathDir, mkdir);
         for(Base64Upload file : files) {
             executeUploadBase64(s3Client, file, file.getFilename());
@@ -158,7 +158,7 @@ public class S3Storage extends Storage<S3Properties> {
     @Override
     public OutputStream getOutputStreamFromStorage(String path, String filename, Boolean mkdir) {
         AmazonS3 s3Client = authorizeOnS3();
-        String pathDir = S3Storage.formatDirPathToS3(path);
+        String pathDir = formatDirPathToS3(path);
         checkIfFolderExists(s3Client, pathDir, mkdir);
         String keyfile = pathDir + filename;
         return new S3OutputStream(s3Client, properties.getBucket(), keyfile);
@@ -270,19 +270,19 @@ public class S3Storage extends Storage<S3Properties> {
         }
     }
 
-    private static String formatDirPathToS3(String path) {
+    private String formatDirPathToS3(String path) {
         path = formatFilePathToS3(path);
         if(!path.endsWith("/")) {
             path += "/";
         }
-        return path;
+        return properties.getBaseDir() + path;
     }
 
-    private static String formatFilePathToS3(String path) {
+    private String formatFilePathToS3(String path) {
         if(path.startsWith("/")) {
             path = path.substring(1);
         }
-        return path;
+        return properties.getBaseDir() + path;
     }
 
 }

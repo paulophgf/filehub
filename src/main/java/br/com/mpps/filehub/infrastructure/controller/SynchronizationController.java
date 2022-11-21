@@ -4,7 +4,7 @@ import br.com.mpps.filehub.domain.model.EnumSynchronizationDirection;
 import br.com.mpps.filehub.domain.model.config.Schema;
 import br.com.mpps.filehub.domain.model.config.Storage;
 import br.com.mpps.filehub.domain.usecase.SynchronizationService;
-import br.com.mpps.filehub.infrastructure.config.StorageReader;
+import br.com.mpps.filehub.infrastructure.config.StorageResourceReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,8 +27,8 @@ public class SynchronizationController {
     @PostMapping(value = "/synch/storage/{right}/{left}")
     public ResponseEntity<UUID> synchronizeSchema(@PathVariable("right") String rightId,
                                                   @PathVariable("left") String leftId) {
-        Storage right = StorageReader.getStorage(rightId);
-        Storage left = StorageReader.getStorage(leftId);
+        Storage right = StorageResourceReader.getStorage(rightId);
+        Storage left = StorageResourceReader.getStorage(leftId);
         UUID synchId = synchronizationService.start(right, left, EnumSynchronizationDirection.BOTH);
         return ResponseEntity.ok(synchId);
     }
@@ -37,8 +37,8 @@ public class SynchronizationController {
     public ResponseEntity<UUID> synchronizeSchemaOneDirection(@PathVariable("right") String rightId,
                                                               @PathVariable("left") String leftId,
                                                               @PathVariable("direction") String direction) {
-        Storage right = StorageReader.getStorage(rightId);
-        Storage left = StorageReader.getStorage(leftId);
+        Storage right = StorageResourceReader.getStorage(rightId);
+        Storage left = StorageResourceReader.getStorage(leftId);
         EnumSynchronizationDirection synchDirection = EnumSynchronizationDirection.getFromString(direction);
         UUID synchId = synchronizationService.start(right, left, synchDirection);
         return ResponseEntity.ok(synchId);
@@ -46,7 +46,7 @@ public class SynchronizationController {
 
     @PostMapping(value = "/synch/schema/{schema}")
     public ResponseEntity<UUID> synchronizeSchemaOneDirection(@PathVariable("schema") String schema) {
-        Schema target = StorageReader.getStoragesBySchema(schema);
+        Schema target = StorageResourceReader.getSchema(schema);
         UUID synchId = synchronizationService.start(target);
         return ResponseEntity.ok(synchId);
     }

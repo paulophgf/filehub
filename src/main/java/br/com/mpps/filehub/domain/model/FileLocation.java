@@ -4,6 +4,8 @@ import br.com.mpps.filehub.domain.exceptions.TriggerAuthenticationException;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Set;
 

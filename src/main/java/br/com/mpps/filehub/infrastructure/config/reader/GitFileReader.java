@@ -1,10 +1,10 @@
 package br.com.mpps.filehub.infrastructure.config.reader;
 
-import br.com.mpps.filehub.domain.model.EnumConfigReaderType;
-import br.com.mpps.filehub.domain.model.config.Schema;
-import br.com.mpps.filehub.infrastructure.config.XMLStorageReader;
-import br.com.mpps.filehub.domain.interfaces.FileConfigReader;
 import br.com.mpps.filehub.domain.exceptions.PropertiesReaderException;
+import br.com.mpps.filehub.domain.interfaces.FileConfigReader;
+import br.com.mpps.filehub.domain.model.EnumConfigReaderType;
+import br.com.mpps.filehub.domain.model.config.StorageResource;
+import br.com.mpps.filehub.infrastructure.config.XMLStorageReader;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,7 +20,6 @@ import org.springframework.web.client.RestTemplate;
 import javax.net.ssl.SSLContext;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Map;
 
 @Component
 public class GitFileReader implements FileConfigReader {
@@ -39,7 +38,7 @@ public class GitFileReader implements FileConfigReader {
     }
 
     @Override
-    public Map<String, Schema> readSchemasFromConfigurationFile() {
+    public StorageResource readSchemasFromConfigurationFile() {
         checkGitReaderParameters();
         XMLStorageReader XMLStorageReader = new XMLStorageReader();
         String content = getConfigurationFileContent();

@@ -5,7 +5,7 @@ import br.com.mpps.filehub.domain.model.FileLocation;
 import br.com.mpps.filehub.domain.model.config.Schema;
 import br.com.mpps.filehub.domain.usecase.DirectoryManager;
 import br.com.mpps.filehub.domain.usecase.TriggerAuthenticationService;
-import br.com.mpps.filehub.infrastructure.config.StorageReader;
+import br.com.mpps.filehub.infrastructure.config.StorageResourceReader;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -44,7 +44,8 @@ public class DirectoryController {
                                                    @PathVariable("schema") String schemaId,
                                                    @ApiParam(value = "Directory path separated by slash character \" / \"", required = true)
                                                    @RequestParam("path") String path) {
-        Schema schema = StorageReader.getStoragesBySchema(schemaId);
+        Schema schema = StorageResourceReader.getSchema(schemaId);
+        schema.checkIfIsAllowedDirectoryOperations();
         FileLocation fileLocation = triggerAuthenticationService.getFileLocation(request, schema, path, false);
         Boolean result = directoryManager.createDirectory(schema, fileLocation.getPath());
         return ResponseEntity.ok(result);
@@ -69,7 +70,8 @@ public class DirectoryController {
                                           @ApiParam(value = "TRUE: Will delete the directory and other directories inside it.\n" +
                                                   "FALSE: Just will delete the directory if it is empty", defaultValue = "false")
                                           @RequestParam(value = "recursively", required = false, defaultValue = "false") Boolean recursively) {
-        Schema schema = StorageReader.getStoragesBySchema(schemaId);
+        Schema schema = StorageResourceReader.getSchema(schemaId);
+        schema.checkIfIsAllowedDirectoryOperations();
         FileLocation fileLocation = triggerAuthenticationService.getFileLocation(request, schema, path, false);
         Boolean result = directoryManager.deleteDirectory(schema, fileLocation.getPath(), recursively);
         return ResponseEntity.ok(result);
@@ -90,7 +92,8 @@ public class DirectoryController {
                                                     @PathVariable("schema") String schemaId,
                                                     @ApiParam(value = "Directory path separated by slash character \" / \"", required = true)
                                                     @RequestParam("path") String path) {
-        Schema schema = StorageReader.getStoragesBySchema(schemaId);
+        Schema schema = StorageResourceReader.getSchema(schemaId);
+        schema.checkIfIsAllowedDirectoryOperations();
         FileLocation fileLocation = triggerAuthenticationService.getFileLocation(request, schema, path, true);
         List<FileItem> result = directoryManager.listFiles(schema, fileLocation.getPath());
         return ResponseEntity.ok(result);
@@ -112,7 +115,8 @@ public class DirectoryController {
                                  @PathVariable("schema") String schemaId,
                                  @ApiParam(value = "Directory path separated by slash character \" / \"", required = true)
                                  @RequestParam("path") String path) {
-        Schema schema = StorageReader.getStoragesBySchema(schemaId);
+        Schema schema = StorageResourceReader.getSchema(schemaId);
+        schema.checkIfIsAllowedDirectoryOperations();
         FileLocation fileLocation = triggerAuthenticationService.getFileLocation(request, schema, path, false);
         boolean existsDirectory = directoryManager.existsDirectory(schema, fileLocation.getPath());
         return existsDirectory ? ResponseEntity.ok(true) : ResponseEntity.notFound().build();

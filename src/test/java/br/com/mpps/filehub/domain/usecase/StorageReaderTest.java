@@ -5,7 +5,7 @@ import br.com.mpps.filehub.domain.model.config.Schema;
 import br.com.mpps.filehub.domain.exceptions.PropertiesReaderException;
 import br.com.mpps.filehub.infrastructure.config.reader.GitFileReader;
 import br.com.mpps.filehub.infrastructure.config.reader.LocalFileReader;
-import br.com.mpps.filehub.infrastructure.config.StorageReader;
+import br.com.mpps.filehub.infrastructure.config.StorageResourceReader;
 import br.com.mpps.filehub.infrastructure.config.PropertiesReaderFactory;
 import br.com.mpps.filehub.reader.XLMPropertiesReaderData;
 import br.com.mpps.filehub.test.TestProperties;
@@ -34,7 +34,7 @@ class StorageReaderTest {
     @Spy
     @Resource
     @InjectMocks
-    private StorageReader storageReader;
+    private StorageResourceReader storageReader;
 
     private XLMPropertiesReaderData data;
     private TestProperties testProperties;
@@ -56,7 +56,7 @@ class StorageReaderTest {
         ReflectionTestUtils.setField(localFileReader, "localFilePath", "src/test/resources/config/success/config.xml");
         when(propertiesReaderFactory.findStrategy(EnumConfigReaderType.LOCAL_FILE)).thenReturn(localFileReader);
         storageReader.loadProperties();
-        assertEquals(StorageReader.getSchemas(), model);
+        assertEquals(StorageResourceReader.getAllSchemas(), model);
     }
 
     @Disabled //TODO Check what the problem
@@ -69,7 +69,7 @@ class StorageReaderTest {
         ReflectionTestUtils.setField(gitFileReader, "accessToken", testProperties.getGitRepositoryToken());
         when(propertiesReaderFactory.findStrategy(EnumConfigReaderType.GIT_FILE)).thenReturn(gitFileReader);
         storageReader.loadProperties();
-        assertEquals(StorageReader.getSchemas(), model);
+        assertEquals(StorageResourceReader.getAllSchemas(), model);
     }
 
     @Test

@@ -11,14 +11,6 @@ import lombok.Getter;
 @Getter
 public enum EnumStorageType {
 
-    MIDDLE(FileSystemProperties.class) {
-
-        @Override
-        public Storage getStorage(String id, StorageProperties properties) {
-            return new FileSystemStorage(id, MIDDLE, (FileSystemProperties) properties);
-        }
-
-    },
     FILE_SYSTEM(FileSystemProperties.class) {
 
         @Override
@@ -48,9 +40,6 @@ public enum EnumStorageType {
         EnumStorageType type;
         try {
             type = EnumStorageType.valueOf(storageType);
-            if(EnumStorageType.MIDDLE.equals(type)) {
-                throw new IllegalArgumentException();
-            }
         } catch (IllegalArgumentException e) {
             throw new PropertiesReaderException("Storage type " + storageType + " not exists");
         }

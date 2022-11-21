@@ -15,6 +15,7 @@ public class Trigger {
     private String header;
     private EnumHttpMethod httpMethod;
     private EnumTriggerAction action;
+    private boolean allowDirOperations;
 
 
     @Override
