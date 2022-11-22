@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -48,6 +50,17 @@ public class S3Storage extends Storage<S3Properties> {
             s3Client.putObject(putObjectRequest);
         }
         return true;
+    }
+
+    @Override
+    public boolean renameDirectory(String path, String name) {
+        String pathDir = formatDirPathToS3(path);
+        AmazonS3 s3Client = authorizeOnS3();
+        Path dirPath = Paths.get(pathDir.substring(0, pathDir.length()-1));
+        String newPath = dirPath.getParent() + "/" + name;
+        PutObjectRequest putObjectRequest = new PutObjectRequest(properties.getBucket(), pathDir, newPath);
+        PutObjectResult result = s3Client.putObject(putObjectRequest);
+        return result.isRequesterCharged();
     }
 
     @Override

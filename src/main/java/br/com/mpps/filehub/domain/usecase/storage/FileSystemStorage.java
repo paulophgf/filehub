@@ -45,6 +45,19 @@ public class FileSystemStorage extends Storage<FileSystemProperties> {
     }
 
     @Override
+    public boolean renameDirectory(String path, String name) {
+        String pathDir = FileSystemStorage.formatDirPathToSF(path);
+        Boolean result = false;
+        File file = new File(formatFilePath(pathDir));
+        if(file.exists() && file.isDirectory()) {
+            Path ditPath = Paths.get(path);
+            String newPath = ditPath.getParent() + File.separator + name;
+            result = file.renameTo(new File(newPath));
+        }
+        return result;
+    }
+
+    @Override
     public boolean deleteDirectory(String path, boolean isRecursive) {
         String pathDir = FileSystemStorage.formatDirPathToSF(path);
         Boolean result = false;

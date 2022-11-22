@@ -1,6 +1,5 @@
 Tarefas:
 1. Corrigir testes unitários
-2. Implementar o endpoint de renomear um diretório
 3. Verificar como funciona o cache local
 
 Testes Manuais:
