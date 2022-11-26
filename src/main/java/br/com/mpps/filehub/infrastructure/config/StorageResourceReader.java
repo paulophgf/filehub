@@ -53,12 +53,8 @@ public class StorageResourceReader {
         return storageList;
     }
 
-    public static Map<String, Schema> getAllSchemas() throws NotFoundException {
-        return storageResource.getSchemas();
-    }
-
-    public static Map<String, Storage> getAllStores() throws NotFoundException {
-        return storageResource.getStorages();
+    public static StorageResource getStorageResource() throws NotFoundException {
+        return storageResource;
     }
 
 }
