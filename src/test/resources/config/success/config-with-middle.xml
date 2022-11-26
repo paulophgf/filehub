@@ -11,12 +11,6 @@
         </storage>
     </storages>
     <schemas>
-        <schema name="S3-Only">
-            <storage-id>S3-Test</storage-id>
-        </schema>
-        <schema name="FileSystem-Only">
-            <storage-id>FileSystem-Test</storage-id>
-        </schema>
         <schema name="S3-And-FileSystem" middle="FileSystem-Test">
             <storage-id>FileSystem-Test</storage-id>
             <storage-id>S3-Test</storage-id>

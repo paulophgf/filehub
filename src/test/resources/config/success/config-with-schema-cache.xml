@@ -11,7 +11,8 @@
         </storage>
     </storages>
     <schemas>
-        <schema name="S3-And-FileSystem" middle="FileSystem-Test">
+        <schema name="S3-And-FileSystem" middle="FileSystem-Test" cache="true">
+            <storage-id>FileSystem-Test</storage-id>
             <storage-id>S3-Test</storage-id>
         </schema>
     </schemas>

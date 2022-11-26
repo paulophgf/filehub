@@ -1,14 +1,11 @@
 package br.com.mpps.filehub.reader;
 
-import br.com.mpps.filehub.domain.model.config.Schema;
-import br.com.mpps.filehub.infrastructure.config.XMLStorageReader;
 import br.com.mpps.filehub.domain.exceptions.PropertiesReaderException;
+import br.com.mpps.filehub.domain.model.config.StorageResource;
+import br.com.mpps.filehub.infrastructure.config.XMLStorageReader;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -27,44 +24,92 @@ class XMLStorageReaderTest {
 
     // SUCCESS
 
-    @Disabled //TODO Check what the problem
     @Test
     @DisplayName("Read Properties XML File (success)")
     void successRead() {
-        Map<String, Schema> model = data.createSchemasModel();
+        StorageResource model = data.createSchemasModel();
         String xmlContent = data.getPropertiesFromXMLFile(XLMPropertiesReaderData.XML_FILE_SUCCESS);
-        Map<String, Schema> schemas = XMLStorageReader.read(xmlContent);
+        StorageResource schemas = XMLStorageReader.read(xmlContent);
         assertEquals(schemas, model);
     }
 
-    @Disabled //TODO Check what the problem
     @Test
     @DisplayName("Read Properties XML File: Schema with middle storage (success)")
     void successReadSchemaWithMiddleStorage() {
-        Map<String, Schema> model = data.createSchemasModelWithMiddle(false);
+        StorageResource model = data.createSchemasModelWithMiddle(false, false);
         String xmlContent = data.getPropertiesFromXMLFile(XLMPropertiesReaderData.XML_FILE_SUCCESS_WITH_MIDDLE);
-        Map<String, Schema> schemas = XMLStorageReader.read(xmlContent);
+        StorageResource schemas = XMLStorageReader.read(xmlContent);
         assertEquals(schemas, model);
+        assertNotNull(schemas.getSchemas().get("S3-And-FileSystem").getMiddle());
+        assertFalse(schemas.getSchemas().get("S3-And-FileSystem").isTemporaryMiddle());
     }
 
-    @Disabled //TODO Check what the problem
     @Test
     @DisplayName("Read Properties XML File: Schema with temporary middle storage (success)")
     void successReadSchemaWithTemporaryMiddleStorage() {
-        Map<String, Schema> model = data.createSchemasModelWithMiddle(true);
+        StorageResource model = data.createSchemasModelWithMiddle(true, false);
         String xmlContent = data.getPropertiesFromXMLFile(XLMPropertiesReaderData.XML_FILE_SUCCESS_WITH_MIDDLE_TEMP);
-        Map<String, Schema> schemas = XMLStorageReader.read(xmlContent);
+        StorageResource schemas = XMLStorageReader.read(xmlContent);
+        assertEquals(schemas, model);
+        assertNotNull(schemas.getSchemas().get("S3-And-FileSystem").getMiddle());
+        assertTrue(schemas.getSchemas().get("S3-And-FileSystem").isTemporaryMiddle());
+    }
+
+    @Test
+    @DisplayName("Read Properties XML File: Auto Schema on storage (success)")
+    void successReadSchemaWithAutoSchemaOnStorage() {
+        StorageResource model = data.createSchemasModelWithAutoSchemaOnStorage();
+        String xmlContent = data.getPropertiesFromXMLFile(XLMPropertiesReaderData.XML_FILE_SUCCESS_WITH_AUTO_SCHEMA_ON_STORAGE);
+        StorageResource schemas = XMLStorageReader.read(xmlContent);
         assertEquals(schemas, model);
     }
 
-    @Disabled //TODO Check what the problem
+    @Test
+    @DisplayName("Read Properties XML File: Auto Schema on storages (success)")
+    void successReadSchemaWithAutoSchemaOnStorages() {
+        StorageResource model = data.createSchemasModelWithAutoSchemaOnStoragesElement();
+        String xmlContent = data.getPropertiesFromXMLFile(XLMPropertiesReaderData.XML_FILE_SUCCESS_WITH_AUTO_SCHEMA_ON_STORAGES_ELEMENT);
+        StorageResource schemas = XMLStorageReader.read(xmlContent);
+        assertEquals(schemas, model);
+    }
+
+    @Test
+    @DisplayName("Read Properties XML File: Schema with cache (success)")
+    void successReadSchemaWithCache() {
+        StorageResource model = data.createSchemasModelWithMiddle(false, true);
+        String xmlContent = data.getPropertiesFromXMLFile(XLMPropertiesReaderData.XML_FILE_SUCCESS_WITH_SCHEMA_CACHE);
+        StorageResource schemas = XMLStorageReader.read(xmlContent);
+        assertEquals(schemas, model);
+        assertTrue(schemas.getSchemas().get("S3-And-FileSystem").isCacheEnabled());
+    }
+
     @Test
     @DisplayName("Read Properties XML File: Schema with trigger (success)")
     void successReadSchemaWithTrigger() {
-        Map<String, Schema> model = data.createSchemasModelWithTrigger();
+        StorageResource model = data.createSchemasModelWithTrigger(false);
         String xmlContent = data.getPropertiesFromXMLFile(XLMPropertiesReaderData.XML_FILE_SUCCESS_WITH_TRIGGER);
-        Map<String, Schema> schemas = XMLStorageReader.read(xmlContent);
+        StorageResource schemas = XMLStorageReader.read(xmlContent);
         assertEquals(schemas, model);
+    }
+
+    @Test
+    @DisplayName("Read Properties XML File: Schema with trigger default (success)")
+    void successReadSchemaWithTriggerDefault() {
+        StorageResource model = data.createSchemasModelWithTriggerDefault();
+        String xmlContent = data.getPropertiesFromXMLFile(XLMPropertiesReaderData.XML_FILE_SUCCESS_WITH_TRIGGER_DEFAULT);
+        StorageResource schemas = XMLStorageReader.read(xmlContent);
+        assertEquals(schemas, model);
+        assertNotNull(schemas.getTriggers().get("default"));
+    }
+
+    @Test
+    @DisplayName("Read Properties XML File: Schema with trigger no directory (success)")
+    void successReadSchemaWithTriggerNoDirectory() {
+        StorageResource model = data.createSchemasModelWithTrigger(true);
+        String xmlContent = data.getPropertiesFromXMLFile(XLMPropertiesReaderData.XML_FILE_SUCCESS_WITH_TRIGGER_NO_DIR);
+        StorageResource schemas = XMLStorageReader.read(xmlContent);
+        assertEquals(schemas, model);
+        assertTrue(schemas.getTriggers().get("myTrigger").isAllowDirOperations());
     }
 
 
@@ -133,17 +178,6 @@ class XMLStorageReaderTest {
                 () -> XMLStorageReader.read(xmlContent)
         );
         String expectedMessage = "Duplicated id was found in storage elements: S3-Test";
-        assertEquals(expectedMessage, exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("Read Properties XML File: Invalid storage's ID (storage)")
-    void storageInvalidId() {
-        String xmlContent = data.getPropertiesFromXMLFile(XLMPropertiesReaderData.XML_FILE_STORAGE_INVALID_ID);
-        Throwable exception = assertThrows(PropertiesReaderException.class,
-                () -> XMLStorageReader.read(xmlContent)
-        );
-        String expectedMessage = "ALL is an invalid storage id";
         assertEquals(expectedMessage, exception.getMessage());
     }
 
@@ -216,6 +250,39 @@ class XMLStorageReaderTest {
         assertEquals(expectedMessage, exception.getMessage());
     }
 
+    @Test
+    @DisplayName("Read Properties XML File: Invalid ID - default (trigger)")
+    void triggerInvalidId() {
+        String xmlContent = data.getPropertiesFromXMLFile(XLMPropertiesReaderData.XML_FILE_TRIGGER_ID_DEFAULT);
+        Throwable exception = assertThrows(PropertiesReaderException.class,
+                () -> XMLStorageReader.read(xmlContent)
+        );
+        String expectedMessage = "Invalid value to attribute 'id': keyword 'default' is not allowed";
+        assertEquals(expectedMessage, exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Read Properties XML File: Invalid default value (trigger)")
+    void triggerInvalidDefaultValue() {
+        String xmlContent = data.getPropertiesFromXMLFile(XLMPropertiesReaderData.XML_FILE_TRIGGER_INVALID_DEFAULT_VALUE);
+        Throwable exception = assertThrows(PropertiesReaderException.class,
+                () -> XMLStorageReader.read(xmlContent)
+        );
+        String expectedMessage = "Invalid value to default attribute in trigger element: trigger-default";
+        assertEquals(expectedMessage, exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Read Properties XML File: Multiple default (trigger)")
+    void triggerMultipleDefault() {
+        String xmlContent = data.getPropertiesFromXMLFile(XLMPropertiesReaderData.XML_FILE_TRIGGER_MULTIPLE_DEFAULT);
+        Throwable exception = assertThrows(PropertiesReaderException.class,
+                () -> XMLStorageReader.read(xmlContent)
+        );
+        String expectedMessage = "Multiple default triggers found. Only one default trigger is allowed.";
+        assertEquals(expectedMessage, exception.getMessage());
+    }
+
 
     // SCHEMA
 
@@ -227,39 +294,6 @@ class XMLStorageReaderTest {
                 () -> XMLStorageReader.read(xmlContent)
         );
         String expectedMessage = "Duplicated name was found in schema elements: S3-Only";
-        assertEquals(expectedMessage, exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("Read Properties XML File: Invalid schema's name (schema)")
-    void invalidSchemaName() {
-        String xmlContent = data.getPropertiesFromXMLFile(XLMPropertiesReaderData.XML_FILE_INVALID_SCHEMA_NAME);
-        Throwable exception = assertThrows(PropertiesReaderException.class,
-                () -> XMLStorageReader.read(xmlContent)
-        );
-        String expectedMessage = "ALL is an invalid schema name";
-        assertEquals(expectedMessage, exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("Read Properties XML File: Schema name is equals a storage id (schema)")
-    void schemaNameEqualsStorageId() {
-        String xmlContent = data.getPropertiesFromXMLFile(XLMPropertiesReaderData.XML_FILE_SCHEMA_NAME_EQUALS_STORAGE_ID);
-        Throwable exception = assertThrows(PropertiesReaderException.class,
-                () -> XMLStorageReader.read(xmlContent)
-        );
-        String expectedMessage = "Schema name is equals a storage id: FileSystem-Test";
-        assertEquals(expectedMessage, exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("Read Properties XML File: Schema with wrong type to middle storage (schema)")
-    void schemaMiddleWrongType() {
-        String xmlContent = data.getPropertiesFromXMLFile(XLMPropertiesReaderData.XML_FILE_SCHEMA_MIDDLE_WRONG_TYPE);
-        Throwable exception = assertThrows(PropertiesReaderException.class,
-                () -> XMLStorageReader.read(xmlContent)
-        );
-        String expectedMessage = "The attribute temp needs to be FILE_SYSTEM storage type";
         assertEquals(expectedMessage, exception.getMessage());
     }
 
@@ -282,6 +316,17 @@ class XMLStorageReaderTest {
                 () -> XMLStorageReader.read(xmlContent)
         );
         String expectedMessage = "Trigger with id = other-trigger not found";
+        assertEquals(expectedMessage, exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Read Properties XML File: Schema with cache and temporary middle (schema)")
+    void schemaWithCacheAndTemporaryMiddle() {
+        String xmlContent = data.getPropertiesFromXMLFile(XLMPropertiesReaderData.XML_FILE_SUCCESS_WITH_SCHEMA_CACHE_AND_TEMPORARY_MIDDLE);
+        Throwable exception = assertThrows(PropertiesReaderException.class,
+                () -> XMLStorageReader.read(xmlContent)
+        );
+        String expectedMessage = "The S3-And-FileSystem schema is using a temporary storage with cache.";
         assertEquals(expectedMessage, exception.getMessage());
     }
 

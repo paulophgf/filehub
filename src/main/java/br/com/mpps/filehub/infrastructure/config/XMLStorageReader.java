@@ -2,6 +2,7 @@ package br.com.mpps.filehub.infrastructure.config;
 
 import br.com.mpps.filehub.domain.exceptions.PropertiesReaderException;
 import br.com.mpps.filehub.domain.model.IgnoreProperty;
+import br.com.mpps.filehub.domain.model.OptionalProperty;
 import br.com.mpps.filehub.domain.model.config.Schema;
 import br.com.mpps.filehub.domain.model.config.Storage;
 import br.com.mpps.filehub.domain.model.config.StorageResource;
@@ -125,7 +126,9 @@ public class XMLStorageReader {
             EnumStorageType storageType = EnumStorageType.get(typeAttribute);
             StorageProperties properties = getPropertiesFromStorageNode(storageType, storageId, storageElement);
             Storage storage = storageType.getStorage(storageId, properties);
-            storage.setAutoSchema(storageElement.getAttribute("generate-schema"));
+            if(storageElement.hasAttribute("generate-schema")) {
+                storage.setAutoSchema(storageElement.getAttribute("generate-schema"));
+            }
             storages.put(storageId, storage);
             if(autoMainSchema != null) {
                 autoMainSchema.getStorages().add(storage);
@@ -157,8 +160,8 @@ public class XMLStorageReader {
             if(!actionAttribute.isEmpty()) {
                 triggerAction = EnumTriggerAction.get(actionAttribute);
             }
-            boolean isTriggerDefault = triggerElement.hasAttribute("default");
-            boolean allowDirOperations = triggerElement.hasAttribute("no-dir");
+            boolean isTriggerDefault = checkBooleanElement(triggerId, triggerElement, "trigger", "default");
+            boolean allowDirOperations = checkBooleanElement(triggerId, triggerElement, "trigger", "no-dir");
             Trigger trigger = getPropertiesFromTriggerNode(triggerId, triggerAction, triggerElement);
             trigger.setAllowDirOperations(allowDirOperations);
             triggers.put(triggerId, trigger);
@@ -174,6 +177,7 @@ public class XMLStorageReader {
 
     private Trigger getPropertiesFromTriggerNode(String triggerId, EnumTriggerAction triggerAction, Element triggerElement) {
         Trigger trigger = new Trigger();
+        trigger.setId(triggerId);
         trigger.setAction(triggerAction);
         String url = getSingleProperty(triggerElement, triggerId, "trigger", "url");
         String header = getSingleProperty(triggerElement, triggerId, "trigger", "header");
@@ -192,11 +196,17 @@ public class XMLStorageReader {
         Field[] fields = storageType.getPropertiesClass().getDeclaredFields();
         for(Field field : fields) {
             if(!field.isAnnotationPresent(IgnoreProperty.class)) {
+                boolean isOptionalField = field.isAnnotationPresent(OptionalProperty.class);
                 NodeList propertyNode = storageElement.getElementsByTagName(field.getName());
+                String propertyValue;
                 if (propertyNode.item(0) == null) {
-                    throw new PropertiesReaderException("The property " + field.getName() + " not found in the storage " + storageName);
+                    if(!isOptionalField) {
+                        throw new PropertiesReaderException("The property " + field.getName() + " not found in the storage " + storageName);
+                    }
+                    propertyValue = field.getDeclaredAnnotation(OptionalProperty.class).defaultValue();
+                } else {
+                    propertyValue = propertyNode.item(0).getTextContent();
                 }
-                String propertyValue = propertyNode.item(0).getTextContent();
                 field.setAccessible(true);
                 field.set(storageProperties, convertStringToType(field, propertyValue));
                 field.setAccessible(false);
@@ -236,7 +246,7 @@ public class XMLStorageReader {
                 throw new PropertiesReaderException("The " + schemaName + " schema is empty");
             }
             Trigger schemaTrigger = getTriggerFromSchema(schemaElement, triggers);
-            boolean isEnabledCache = schemaElement.hasAttribute("cache");
+            boolean isEnabledCache = checkBooleanElement(schemaName, schemaElement, "schema", "cache");
             LinkedList<Storage> storageList = getStoragesFromSchema(schemaElement, storages);
             Storage middleStorage = getMiddleStorage(schemaElement, storages);
             schemas.put(schemaName, new Schema(schemaName, schemaTrigger, middleStorage, storageList, isEnabledCache));
@@ -326,6 +336,18 @@ public class XMLStorageReader {
         if(!header.matches("^[a-zA-Z0-9\\-]+$")) {
             throw new PropertiesReaderException("Invalid value to header property in " + triggerId + " trigger element");
         }
+    }
+
+    private boolean checkBooleanElement(String elementName, Element element, String typeElement, String attributeName) {
+        boolean isCache = false;
+        if(element.hasAttribute(attributeName)) {
+            String value = element.getAttribute(attributeName).toLowerCase().trim();
+            if(!value.equals("true") && !value.equals("false")) {
+                throw new PropertiesReaderException("Invalid value to " + attributeName + " attribute in " + typeElement + " element: " + elementName);
+            }
+            isCache = "true".equals(value);
+        }
+        return isCache;
     }
 
 }
