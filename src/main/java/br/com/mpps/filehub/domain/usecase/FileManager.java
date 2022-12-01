@@ -1,19 +1,21 @@
 package br.com.mpps.filehub.domain.usecase;
 
 import br.com.mpps.filehub.domain.exceptions.UploadException;
+import br.com.mpps.filehub.domain.model.Base64Upload;
 import br.com.mpps.filehub.domain.model.FileLocation;
 import br.com.mpps.filehub.domain.model.FileMetadata;
 import br.com.mpps.filehub.domain.model.config.Schema;
 import br.com.mpps.filehub.domain.model.config.Storage;
-import br.com.mpps.filehub.domain.model.Base64Upload;
-import br.com.mpps.filehub.domain.model.storage.EnumStorageType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -23,17 +25,15 @@ public class FileManager {
 
     public void upload(Schema schema, FileLocation fileLocation, MultipartFile file, Boolean mkdir) {
         log.info("UPLOAD SINGLE FILE USING MULTIPART FILE");
-        Collection<Storage> storages = schema.getStorages();
-        uploadSequential(storages, fileLocation, file, mkdir);
+        uploadSequential(schema, fileLocation, file, mkdir);
     }
 
     public void upload(Schema schema, String path, MultipartFile[] files, Boolean mkdir, Boolean parallel) {
         log.info("UPLOAD MULTIPLE FILE USING MULTIPART FILE");
-        Collection<Storage> storages = schema.getStorages();
         if(parallel) {
-            uploadParallel(storages, path, files, mkdir);
+            uploadParallel(schema, path, files, mkdir);
         } else {
-            uploadSequential(storages, path, files, mkdir);
+            uploadSequential(schema, path, files, mkdir);
         }
     }
 
@@ -65,60 +65,75 @@ public class FileManager {
 
 
     public boolean existsFile(Schema schema, String filePath) {
-        Collection<Storage> storages = schema.getStorages();
-        Storage firstStorage = storages.stream().findFirst().get();
-        return firstStorage.existsFile(filePath);
+        Storage storage = schema.getFirstUsefulStorage();
+        return storage.existsFile(filePath);
     }
 
 
     public String getContentType(Schema schema, String filePath) {
-        Collection<Storage> storages = schema.getStorages();
-        Storage firstStorage = storages.stream().findFirst().get();
-        return firstStorage.getFileDetails(filePath).getContentType();
+        Storage storage = schema.getFirstUsefulStorage();
+        return storage.getFileDetails(filePath).getContentType();
     }
 
 
     public FileMetadata getDetails(Schema schema, String filePath) {
-        Collection<Storage> storages = schema.getStorages();
-        Storage firstStorage = storages.stream().findFirst().get();
-        return firstStorage.getFileDetails(filePath);
+        Storage storage = schema.getFirstUsefulStorage();
+        return storage.getFileDetails(filePath);
     }
 
 
-    public InputStream downloadFile(Schema schema, String filePath) throws IOException {
-        Collection<Storage> storages = schema.getStorages();
-        Storage firstStorage = storages.stream().findFirst().get();
-        return firstStorage.downloadFile(filePath);
+    public void downloadFile(Schema schema, String filePath, HttpServletResponse response) throws IOException {
+        Storage storage;
+        if(schema.isCacheEnabled()) {
+            if(schema.getMiddle().existsFile(filePath)) {
+                storage = schema.getMiddle();
+                copy(storage.downloadFile(filePath), response.getOutputStream());
+            } else {
+                storage = schema.getFirstUsefulStorage();
+                Path path = Paths.get(filePath);
+                String fileName = path.getFileName().toString();
+                String dirPath = path.getParent().toString();
+                OutputStream middleOutputStream = schema.getMiddle().getOutputStreamFromStorage(fileName, dirPath, true);
+                copy(storage.downloadFile(filePath), response.getOutputStream(), middleOutputStream);
+            }
+        } else {
+            storage = schema.getFirstUsefulStorage();
+            copy(storage.downloadFile(filePath), response.getOutputStream());
+        }
     }
 
-    public void copy(InputStream source, OutputStream target) throws IOException {
+    public void copy(InputStream source, OutputStream... target) throws IOException {
         try {
             byte[] buf = new byte[8192];
             int length;
             while ((length = source.read(buf)) != -1) {
-                target.write(buf, 0, length);
+                for(OutputStream out : target) {
+                    out.write(buf, 0, length);
+                }
             }
         } catch (IOException e) {
             throw new RuntimeException("Download problem");
         } finally {
             source.close();
-            target.close();
+            for(OutputStream out : target) {
+                out.close();
+            }
         }
     }
 
 
 
-    private void uploadSequential(Collection<Storage> storages, String path, MultipartFile[] files, Boolean mkdir) {
+    private void uploadSequential(Schema schema, String path, MultipartFile[] files, Boolean mkdir) {
         log.info("SEQUENTIAL");
-        Storage firstStorage = storages.stream().findFirst().get();
-        if(EnumStorageType.MIDDLE.equals(firstStorage.getType())) {
+        Collection<Storage> storages = schema.getStorages();
+        if(schema.getMiddle() != null) {
             log.info("MIDDLE MODE");
-            firstStorage.upload(path, files, mkdir);
+            schema.getMiddle().upload(path, files, mkdir);
             List<String> filenames = Arrays.stream(files).map(MultipartFile::getOriginalFilename).collect(Collectors.toList());
             new Thread(() -> {
-                storages.remove(firstStorage);
+                storages.remove(schema.getMiddle());
                 for (Storage storage : storages) {
-                    firstStorage.transfer(storage, path, filenames, mkdir);
+                    schema.getMiddle().transfer(storage, path, filenames, mkdir);
                 }
             }).start();
         } else {
@@ -128,15 +143,15 @@ public class FileManager {
         }
     }
 
-    private void uploadSequential(Collection<Storage> storages, FileLocation fileLocation, MultipartFile file, Boolean mkdir) {
-        Storage firstStorage = storages.stream().findFirst().get();
-        if(EnumStorageType.MIDDLE.equals(firstStorage.getType())) {
+    private void uploadSequential(Schema schema, FileLocation fileLocation, MultipartFile file, Boolean mkdir) {
+        Collection<Storage> storages = schema.getStorages();
+        if(schema.getMiddle() != null) {
             log.info("MIDDLE MODE");
-            firstStorage.upload(fileLocation, file, mkdir);
+            schema.getMiddle().upload(fileLocation, file, mkdir);
             new Thread(() -> {
-                storages.remove(firstStorage);
+                storages.remove(schema.getMiddle());
                 for (Storage storage : storages) {
-                    firstStorage.transfer(storage, fileLocation, mkdir);
+                    schema.getMiddle().transfer(storage, fileLocation, mkdir);
                 }
             }).start();
         } else {
@@ -146,12 +161,12 @@ public class FileManager {
         }
     }
 
-    private void uploadParallel(Collection<Storage> storages, String path, MultipartFile[] files, Boolean mkdir) {
+    private void uploadParallel(Schema schema, String path, MultipartFile[] files, Boolean mkdir) {
         log.info("PARALLEL");
         for(MultipartFile multipartFile : files) {
             int readByteCount;
             byte[] buffer = new byte[4096];
-            List<OutputStream> outputStreamList = openOutputStreamList(storages, path, multipartFile, mkdir);
+            List<OutputStream> outputStreamList = openOutputStreamList(schema.getStorages(), path, multipartFile, mkdir);
             try(InputStream in = multipartFile.getInputStream()) {
                 while((readByteCount = in.read(buffer)) != -1) {
                     for(OutputStream out : outputStreamList) {

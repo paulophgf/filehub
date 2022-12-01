@@ -17,8 +17,14 @@ public class ResponseExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<String> entityNotFound(NotFoundException e) {
-        log.info(e.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        ResponseEntity response;
+        if(e.getMessage() != null) {
+            log.info(e.getMessage());
+            response = ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } else {
+            response = ResponseEntity.notFound().build();
+        }
+        return response;
     }
 
     @ResponseStatus(HttpStatus.UNAUTHORIZED)

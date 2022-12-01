@@ -1,6 +1,6 @@
 package br.com.mpps.filehub.system;
 
-import br.com.mpps.filehub.infrastructure.config.StorageReader;
+import br.com.mpps.filehub.infrastructure.config.StorageResourceReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,10 +17,10 @@ public class SystemBoot {
     private Logger logger = LoggerFactory.getLogger(SystemBoot.class);
 
     private SystemProperties properties;
-    private StorageReader storageReader;
+    private StorageResourceReader storageReader;
 
     @Autowired
-    public SystemBoot(SystemProperties properties, StorageReader storageReader) {
+    public SystemBoot(SystemProperties properties, StorageResourceReader storageReader) {
         this.properties = properties;
         this.storageReader = storageReader;
     }
