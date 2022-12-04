@@ -124,7 +124,7 @@ configuration properties the storage has. The storage types are listed next:
     <tbody>
       <tr style="background-color: white; color: black">
         <th colspan="1" style="text-align: center">
-            <img src="https://user-images.githubusercontent.com/32067860/205457108-8a72b7de-fb67-49d8-8ce0-2e015105dca8.png" alt="drawing" width="80"/>
+            <img src="https://user-images.githubusercontent.com/32067860/205519206-bf7fe5be-d8d6-4853-8119-d61c7c11a8f8.png" alt="drawing" width="80"/>
             <div>Local File System</div>
         </th>
         <td colspan="1">
@@ -142,7 +142,7 @@ configuration properties the storage has. The storage types are listed next:
       <tr style="background-color: transparent; border-width: 0px;"><td colspan="2"></td></tr>
       <tr style="background-color: white; color: black">
         <th colspan="1" style="text-align: center">
-            <img src="https://user-images.githubusercontent.com/32067860/205457114-e7f44363-a144-4b14-938b-8fcb216546d1.png" alt="drawing" width="80"/>
+            <img src="https://user-images.githubusercontent.com/32067860/205519209-92f81d0b-b38a-416b-923e-cb2d2cab8ee4.png" alt="drawing" width="80"/>
             <div>Amazon S3</div>
         </th>
         <td colspan="1">
