@@ -18,6 +18,7 @@ gateway, using a safe and easy way.
 
 ##Configuration
 
+
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 The FileHub uses an XML configuration file where the properties and some rules are defined. That file can be created 
 locally where the service is executed or remotely using a Git repository.
