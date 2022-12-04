@@ -16,6 +16,10 @@ import java.util.Collections;
 @EnableSwagger2
 public class SwaggerConfig {
 
+    private static final String description = "The FileHub is a service that standardizes file management, independent " +
+            "of the storage platform used. Moreover, it makes file persistence easier when we think about multiple storage " +
+            "places, serving as requests gateway, using a safe and easy way.";
+
     @Bean
     public Docket apiPlanModule() {
         return new Docket(DocumentationType.SWAGGER_2)
@@ -26,7 +30,7 @@ public class SwaggerConfig {
                 .build()
                 .apiInfo(new ApiInfoBuilder()
                         .title("FileHub API")
-                        .description("API Operations")
+                        .description(description)
                         .version("Version 1")
                         .build()).ignoredParameterTypes(ResponseEntity.class)
                 .produces(Collections.singleton("application/json"))
