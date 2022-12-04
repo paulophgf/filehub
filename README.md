@@ -16,7 +16,7 @@ gateway, using a safe and easy way.
 <!--------------------------------------------------------------------------------------------------------------------->
 
 
-##Configuration
+## Configuration
 
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -76,7 +76,7 @@ The following table shows the environment variables used to define where the con
 <!--------------------------------------------------------------------------------------------------------------------->
 
 
-###Concepts
+### Concepts
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Before executing the service it is necessary to define which storage platforms will be used, in addition to configuring 
@@ -87,7 +87,7 @@ service starts. The file contains some elements that will process the requests. 
 <!--------------------------------------------------------------------------------------------------------------------->
 
 
-###Storage
+### Storage
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 It is used to represent a storage platform. A storage has an ID to identify it inside the service and a type. Each type 
@@ -169,7 +169,7 @@ configuration properties the storage has. The storage types are listed next:
 <!--------------------------------------------------------------------------------------------------------------------->
 
 
-###Schema
+### Schema
 
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -206,7 +206,7 @@ storages linked.
 ````
 <p align="center"><sub>Schema declaration example</sub></p>
 
-###Auto Schemas
+### Auto Schemas
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 It is not necessary to declare a schema for each storage to perform storage operations individually. It is possible to 
@@ -258,7 +258,7 @@ with all existing storages. See the example below:
 <!--------------------------------------------------------------------------------------------------------------------->
 
 
-###Trigger
+### Trigger
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Triggers are used to guarantee security on operations. They work as **web hooks** that will validate if an operation is 
@@ -357,10 +357,6 @@ an operation. The following sequence diagram shows that process:
 The parameter returned from the Authorization Service response should have the same name as the parameter used in 
 operation URL ($user = user).
 
-!!! info inline end
-
-    The **default** term is a special value and cannot be used as ID to a trigger.
-
 > **Note**
 > The **default** term is a special value and cannot be used as ID to a trigger.
 
@@ -368,7 +364,7 @@ operation URL ($user = user).
 > If a trigger has the action attribute configured as the value UPDATE and the authorization header is filled
 on the request, the trigger will call the configured endpoint even though.
 
-####Default Trigger
+#### Default Trigger
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 There is the possibility to create a trigger that will be called on all schemas without an explicit filled trigger. 
@@ -394,7 +390,7 @@ To do that, use the **default** attribute on the trigger as shown in the example
 <!--------------------------------------------------------------------------------------------------------------------->
 
 
-##Operations
+## Operations
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 After the understanding of the main FileHub concepts, the next step is to know which operations you can execute by the service.
@@ -403,7 +399,7 @@ After the understanding of the main FileHub concepts, the next step is to know w
 <!--------------------------------------------------------------------------------------------------------------------->
 
 
-###Directories
+### Directories
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 The directories are used as a way to group and organize the files. The major part of storage deals with the directory 
@@ -418,7 +414,7 @@ management, allowing the following operations:
 - Check if the directory exists
 
 
-#####Disable directory operations
+##### Disable directory operations
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 To disable directory operations, it is possible use the no-dir attribute on a trigger as shown in the example below:
@@ -436,7 +432,7 @@ To disable directory operations, it is possible use the no-dir attribute on a tr
 <!--------------------------------------------------------------------------------------------------------------------->
 
 
-###Upload
+### Upload
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 An upload operation allows the sending of files that will be saved in all storages linked with a schema. When the 
@@ -453,7 +449,7 @@ Regardless of the transference type, the upload request will only return a respo
 ended to all storages from the schema.
 
 
-###Middle-Storage
+### Middle-Storage
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 In some cases, where there exists only one storage in the schema and the files are small, the transference operation 
@@ -493,7 +489,7 @@ In the example above, in an upload operation, the FileSystem-Test storage will r
 to the consumer application and will then transfer the file to the S3-Test storage.
 
 
-###Temporary Middle-Storage
+### Temporary Middle-Storage
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 A storage defined as middle-storage and not included in the one of schema storages will be a temporary storage. 
@@ -516,14 +512,14 @@ other words, it is a temporary middle-storage.
 <!--------------------------------------------------------------------------------------------------------------------->
 
 
-###Download
+### Download
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Different from the upload operation that does the communication among all the schema storages, the download operation 
 will use the first schema storage to execute the transfer operation.
 
 
-###Cache-Storage
+### Cache-Storage
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 The **cache** attribute usage will affect the download operation. If the file isn’t inside of the first storage, 
@@ -554,7 +550,7 @@ file to the FileSystem-Test. On the other hand, the FileHub will return a not fo
 
 -----
 
-###API Documentation
+### API Documentation
 
 * Run the service and access: http://localhost:8088/swagger-ui.html
 * Apiary Docs: https://filehub.docs.apiary.io
