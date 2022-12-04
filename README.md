@@ -25,14 +25,12 @@ locally where the service is executed or remotely using a Git repository.
 The following table shows the environment variables used to define where the configuration file is:
 
 <table>
-    <thead>
+    <tbody>
       <tr style="background-color: #E1E1E1; color: black">
         <th colspan="2" style="text-align: left; font-size: small">
             <i style="color: red">*</i> Required
         </th>
       </tr>
-    </thead>
-    <tbody>
       <tr style="background-color: #DAE8FC; color: black">
         <th>Variable name</th>
         <th>Description</th>
@@ -40,7 +38,7 @@ The following table shows the environment variables used to define where the con
       <tr style="background-color: white; color: black">
         <td>CONFIG_TYPE <i style="color: red">*</i></td>
         <td>Define if the file is locally or remotely.<br>
-            Default value: **LOCAL_FILE**<br>
+            Default value: <b>LOCAL_FILE</b><br>
             Possible values:<br>
             <li>LOCAL_FILE</li>
             <li>GIT_FILE</li>
@@ -54,7 +52,7 @@ The following table shows the environment variables used to define where the con
         <td>CONFIG_GIT_FILE_PATH</td>
         <td>
             Git repository file address (File URL)<br>
-            Use **raw** file URL (plain text)
+            Use <b>raw</b> file URL (plain text)
         </td>
       </tr>
       <tr style="background-color: white; color: black">
@@ -63,11 +61,11 @@ The following table shows the environment variables used to define where the con
       </tr>
       <tr style="background-color: white; color: black">
         <td>MAX_FILE_SIZE</td>
-        <td>Maximum file size allowed.<br>Default value: **7000000000**</td>
+        <td>Maximum file size allowed.<br>Default value: <b>7000000000</b></td>
       </tr>
       <tr style="background-color: white; color: black">
         <td>MAX_REQUEST_SIZE</td>
-        <td>Maximum request size allowed<br>Default value: **7000000000**</td>
+        <td>Maximum request size allowed<br>Default value: <b>7000000000</b></td>
       </tr>
     </tbody>
 </table>
@@ -76,7 +74,7 @@ The following table shows the environment variables used to define where the con
 <!--------------------------------------------------------------------------------------------------------------------->
 
 
-### Concepts
+## Concepts
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Before executing the service it is necessary to define which storage platforms will be used, in addition to configuring 
@@ -112,7 +110,7 @@ In the configuration file the storages are defined inside of tag **storages** li
    </storages>
 </filehub>
 ````
-<p align="center"><sub>Storage declaration example</sub></p>
+<p align="center"><sub>Storage declaration example</sub></p> <br>
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 All storage elements have an **ID** and a **type**. The ID will identify the storage and the type will define which 
@@ -131,13 +129,13 @@ configuration properties the storage has. The storage types are listed next:
         </th>
         <td colspan="1">
             <div>It defines as storage a server directory where the FileHub is running.</div>
-            <div>**Type:** FILE_SYSTEM</div>
+            <div>**Type:</b> FILE_SYSTEM</div>
         </td>
       </tr>
       <tr style="background-color: white; color: black">
         <td colspan="2">
-            <div style="color: blue">**Properties:**</div>
-            <li>**baseDir:** root directory</li>
+            <div style="color: blue"><b>Properties:</b></div>
+            <li>**baseDir:</b> root directory</li>
         </td>
       </tr>
       <!--######################################################################################-->  
@@ -149,17 +147,17 @@ configuration properties the storage has. The storage types are listed next:
         </th>
         <td colspan="1">
             <div>It defines a S3 bucket as a storage.</div>
-            <div>**Type:** AWS_S3</div>
+            <div><b>Type:</b> AWS_S3</div>
         </td>
       </tr>
       <tr style="background-color: white; color: black">
         <td colspan="2">
             <div style="color: blue">**Properties:**</div>
-            <li>**region:** AWS region (e.g.: sa-east-1)</li>
-            <li>**secretKeyId:** IAM user ID</li>
-            <li>**secretKey:**  IAM user secret</li>
-            <li>**bucket:** S3 bucket name</li>
-            <li>**baseDir:** root directory</li>
+            <li><b>region:</b> AWS region (e.g.: sa-east-1)</li>
+            <li><b>secretKeyId:</b> IAM user ID</li>
+            <li><b>secretKey:</b>  IAM user secret</li>
+            <li><b>bucket:</b> S3 bucket name</li>
+            <li><b>baseDir:</b> root directory</li>
         </td>
       </tr>
     </tbody>
@@ -204,7 +202,7 @@ storages linked.
     </schemas>
 </filehub>
 ````
-<p align="center"><sub>Schema declaration example</sub></p>
+<p align="center"><sub>Schema declaration example</sub></p> <br>
 
 ### Auto Schemas
 
@@ -228,7 +226,7 @@ inform FileHub to perform the file reading, creating a schema for each existing 
     </storages>
 </filehub>
 ````
-<p align="center"><sub>Example of schema creation directly on storage</sub></p>
+<p align="center"><sub>Example of schema creation directly on storage</sub></p> <br>
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 It is also possible to use the attribute **generate-schema** on the **storages** element to create a schema 
@@ -249,10 +247,11 @@ with all existing storages. See the example below:
     </storages>
 </filehub>
 ````
-<p align="center"><sub>Example of schema creation with all existing storages</sub></p>
+<p align="center"><sub>Example of schema creation with all existing storages</sub></p> <br>
 
 > **Warning**
 > If an auto schema was created without a configured default trigger, the schema won’t have any kind of security.
+<br>
 
 
 <!--------------------------------------------------------------------------------------------------------------------->
@@ -271,8 +270,12 @@ The trigger element has an **ID** to the identification and a **action** attribu
    (creation/updating/exclusion) or reading (download);
 2. **UPDATE:** the trigger just will be applied to writing operations (creation/updating/exclusion).
 
+<br>
+
 > **Warning**
 > The **default** term is a special value and cannot be used as ID to a trigger.
+
+<br>
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 When a trigger is configured it is necessary to inform three properties:
@@ -283,6 +286,8 @@ When a trigger is configured it is necessary to inform three properties:
    code, the operation will be canceled.
 3.  **http-method (optional):** define which HTTP method type will be used on the request (GET, HEAD, POST, PUT,
     PATCH, DELETE, OPTIONS). The default value is GET.
+
+<br>
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 In the XML configuration file, the triggers are defined inside of the **triggers** tag. A trigger should be linked 
@@ -312,7 +317,7 @@ For clarification, see the following configuration example:
     </schemas>
 </filehub>
 ````
-<p align="center"><sub>Trigger declaration example</sub></p>
+<p align="center"><sub>Trigger declaration example</sub></p> <br>
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 We can observe the trigger **user-auth** was created and the schema **test** uses it. In the other words, each operation from 
@@ -323,6 +328,8 @@ The flowchart below shows the process considering the upload operation to the pr
 
 <p align="center">
     <img src="https://user-images.githubusercontent.com/32067860/205391431-3c1d8d56-2bd8-48d1-9737-5469f3564cbb.png" alt="drawing" width="80%"/>
+</p>
+<p align="center">
     <sub>Flowchart of file uploading with trigger</sub>
 </p>
 
@@ -340,6 +347,7 @@ system where each user has a directory to store their images. We will have URLs 
 - /schema/example/user/**john**/photo01
 - /schema/example/user/**john**/photo02
 - /schema/example/user/**john**/photo03
+<br>
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 You can see that to perform an upload or download operation, the consumer application should use the FileHub to manage 
@@ -350,12 +358,15 @@ an operation. The following sequence diagram shows that process:
 
 <p align="center">
     <img src="https://user-images.githubusercontent.com/32067860/205391630-604078ed-1b27-4772-918a-6477f924f4e9.png" alt="drawing" width="80%"/>
+</p>
+<p align="center">
     <sub>Sequence diagram of trigger communication</sub>
 </p>
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 The parameter returned from the Authorization Service response should have the same name as the parameter used in 
 operation URL ($user = user).
+<br>
 
 > **Note**
 > The **default** term is a special value and cannot be used as ID to a trigger.
@@ -363,6 +374,8 @@ operation URL ($user = user).
 > **Warning**
 > If a trigger has the action attribute configured as the value UPDATE and the authorization header is filled
 on the request, the trigger will call the configured endpoint even though.
+
+<br>
 
 #### Default Trigger
 
@@ -384,7 +397,7 @@ To do that, use the **default** attribute on the trigger as shown in the example
     </trigger>
 </filehub>
 ````
-<p align="center"><sub>Default trigger example</sub></p>
+<p align="center"><sub>Default trigger example</sub></p> <br>
 
 
 <!--------------------------------------------------------------------------------------------------------------------->
@@ -482,7 +495,7 @@ the rest of the storages. See the following example:
     </schemas>
 </filehub>
 ````
-<p align="center"><sub>Middle-storage example</sub></p>
+<p align="center"><sub>Middle-storage example</sub></p> <br>
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 In the example above, in an upload operation, the FileSystem-Test storage will receive the file, return the answer 
@@ -502,7 +515,7 @@ It will work like a middle-storage, but it will delete all files after the uploa
     </schema>
 </schemas>
 ````
-<p align="center"><sub>Temporary middle-storage example</sub></p>
+<p align="center"><sub>Temporary middle-storage example</sub></p> <br>
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 As shown in the example above, the FileSystem-Test storage isn’t declared in any storage-id schema element. In 
@@ -533,12 +546,14 @@ it, leaving the file saved in the first storage as well.
     </schema>
 </schemas>
 ````
-<p align="center"><sub>Cache-storage example</sub></p>
+<p align="center"><sub>Cache-storage example</sub></p> <br>
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 In the previous example, if a file is missing from the FileSystem-Test storage, the FileHub will check if the S3-Test 
 has the file. In the case of a positive result, the download operation will be executed, but also transferring the 
 file to the FileSystem-Test. On the other hand, the FileHub will return a not found error.
+
+<br>
 
 > **Warning**
 > If there is a middle-storage linked with the schema, that storage will be used to do the cache operation,
