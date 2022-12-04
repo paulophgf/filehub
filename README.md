@@ -558,7 +558,8 @@ file to the FileSystem-Test. On the other hand, the FileHub will return a not fo
 > **Warning**
 > If there is a middle-storage linked with the schema, that storage will be used to do the cache operation,
 > in the opposite case, it will be the first storage from the schema.
-> ------------------------------------------------------------------------------------------------------- 
+
+> **Warning**
 > It is not allowed to have a cache-storage and a temporary middle-storage configuration at the same time.
 
 <br>

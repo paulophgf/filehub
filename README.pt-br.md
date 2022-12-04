@@ -572,7 +572,8 @@ arquivo também para o FileSystem-Test, o primeiro storage consultado.
 > **Warning**
 > Caso exista um middle-storage associado ao schema, o mesmo será utilizado para o cache, caso contrário, 
 > será o primeiro storage do schema.
-> -------------------------------------------------------------------------------------------------------
+
+> **Warning**
 > Não é possível ter um cache-storage atuando como middle-storage temporário.
 
 <br>
