@@ -15,6 +15,7 @@ public abstract class Storage<T extends StorageProperties> implements StorageOpe
     protected String id;
     private EnumStorageType type;
     protected T properties;
+    private String autoSchema;
 
     public Storage(String id, EnumStorageType type, T properties) {
         this.id = id;

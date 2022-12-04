@@ -10,8 +10,21 @@
             <baseDir>C:\Users\user\filehub</baseDir>
         </storage>
     </storages>
+    <triggers>
+        <trigger id="myTrigger" action="UPDATE" no-dir="true">
+            <url>http://localhost:9002/auth</url>
+            <header>Authorization</header>
+        </trigger>
+    </triggers>
     <schemas>
-        <schema name="S3-And-FileSystem" middle="FileSystem-Test">
+        <schema name="S3-Only">
+            <storage-id>S3-Test</storage-id>
+        </schema>
+        <schema name="FileSystem-Only">
+            <storage-id>FileSystem-Test</storage-id>
+        </schema>
+        <schema name="S3-And-FileSystem" trigger="myTrigger">
+            <storage-id>FileSystem-Test</storage-id>
             <storage-id>S3-Test</storage-id>
         </schema>
     </schemas>

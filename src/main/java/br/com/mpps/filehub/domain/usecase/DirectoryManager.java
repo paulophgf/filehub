@@ -22,6 +22,15 @@ public class DirectoryManager {
         return result;
     }
 
+    public boolean renameDirectory(Schema schema, String path, String name) {
+        Boolean result = true;
+        Collection<Storage> storages = schema.getStorages();
+        for(Storage storage : storages) {
+            result = result && storage.renameDirectory(path, name);
+        }
+        return result;
+    }
+
     public boolean deleteDirectory(Schema schema, String path, boolean isRecursive) {
         Boolean result = true;
         Collection<Storage> storages = schema.getStorages();

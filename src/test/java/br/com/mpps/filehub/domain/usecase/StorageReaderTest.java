@@ -1,12 +1,12 @@
 package br.com.mpps.filehub.domain.usecase;
 
-import br.com.mpps.filehub.domain.model.EnumConfigReaderType;
-import br.com.mpps.filehub.domain.model.config.Schema;
 import br.com.mpps.filehub.domain.exceptions.PropertiesReaderException;
+import br.com.mpps.filehub.domain.model.EnumConfigReaderType;
+import br.com.mpps.filehub.domain.model.config.StorageResource;
+import br.com.mpps.filehub.infrastructure.config.PropertiesReaderFactory;
+import br.com.mpps.filehub.infrastructure.config.StorageResourceReader;
 import br.com.mpps.filehub.infrastructure.config.reader.GitFileReader;
 import br.com.mpps.filehub.infrastructure.config.reader.LocalFileReader;
-import br.com.mpps.filehub.infrastructure.config.StorageReader;
-import br.com.mpps.filehub.infrastructure.config.PropertiesReaderFactory;
 import br.com.mpps.filehub.reader.XLMPropertiesReaderData;
 import br.com.mpps.filehub.test.TestProperties;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,8 +20,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import javax.annotation.Resource;
 
-import java.util.Map;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
@@ -34,7 +32,7 @@ class StorageReaderTest {
     @Spy
     @Resource
     @InjectMocks
-    private StorageReader storageReader;
+    private StorageResourceReader storageReader;
 
     private XLMPropertiesReaderData data;
     private TestProperties testProperties;
@@ -47,29 +45,29 @@ class StorageReaderTest {
     }
 
 
-    @Disabled //TODO Check what the problem
+    @Disabled // Config testProperties to do this test
     @Test
     void loadPropertiesFromLocalFile() {
-        Map<String, Schema> model = data.createSchemasModel();
+        StorageResource model = data.createSchemasModel();
         LocalFileReader localFileReader = new LocalFileReader();
         ReflectionTestUtils.setField(storageReader, "configType", "LOCAL_FILE");
         ReflectionTestUtils.setField(localFileReader, "localFilePath", "src/test/resources/config/success/config.xml");
         when(propertiesReaderFactory.findStrategy(EnumConfigReaderType.LOCAL_FILE)).thenReturn(localFileReader);
         storageReader.loadProperties();
-        assertEquals(StorageReader.getSchemas(), model);
+        assertEquals(StorageResourceReader.getStorageResource(), model);
     }
 
-    @Disabled //TODO Check what the problem
+    @Disabled // Config testProperties to do this test
     @Test
     void loadPropertiesFromGitRepository() {
-        Map<String, Schema> model = data.createSchemasModel();
+        StorageResource model = data.createSchemasModel();
         GitFileReader gitFileReader = new GitFileReader();
         ReflectionTestUtils.setField(storageReader, "configType", "GIT_FILE");
         ReflectionTestUtils.setField(gitFileReader, "fileURL", testProperties.getGitRepositoryUrl());
         ReflectionTestUtils.setField(gitFileReader, "accessToken", testProperties.getGitRepositoryToken());
         when(propertiesReaderFactory.findStrategy(EnumConfigReaderType.GIT_FILE)).thenReturn(gitFileReader);
         storageReader.loadProperties();
-        assertEquals(StorageReader.getSchemas(), model);
+        assertEquals(StorageResourceReader.getStorageResource(), model);
     }
 
     @Test

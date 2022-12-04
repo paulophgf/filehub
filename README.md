@@ -74,8 +74,6 @@ The following table shows the environment variables used to define where the con
 
 
 <!--------------------------------------------------------------------------------------------------------------------->
-
-
 <h3>Concepts</h3>
 
 <p>
