@@ -26,10 +26,10 @@ The following table shows the environment variables used to define where the con
 
 <table>
     <tbody>
-      <tr style="background-color: #E1E1E1; color: black">
-        <th colspan="2" style="text-align: left; font-size: small">
-            <i style="color: red">*</i> Required
-        </th>
+      <tr>
+        <td colspan="2" style="text-align: left">
+            * <sub>Required</sub>
+        </td>
       </tr>
       <tr style="background-color: #DAE8FC; color: black">
         <th>Variable name</th>
@@ -129,13 +129,13 @@ configuration properties the storage has. The storage types are listed next:
         </th>
         <td colspan="1">
             <div>It defines as storage a server directory where the FileHub is running.</div>
-            <div>**Type:</b> FILE_SYSTEM</div>
+            <div><b>Type:</b> FILE_SYSTEM</div>
         </td>
       </tr>
       <tr style="background-color: white; color: black">
         <td colspan="2">
             <div style="color: blue"><b>Properties:</b></div>
-            <li>**baseDir:</b> root directory</li>
+            <li><b>baseDir:</b> root directory</li>
         </td>
       </tr>
       <!--######################################################################################-->  
@@ -152,7 +152,7 @@ configuration properties the storage has. The storage types are listed next:
       </tr>
       <tr style="background-color: white; color: black">
         <td colspan="2">
-            <div style="color: blue">**Properties:**</div>
+            <div style="color: blue"><b>Properties:</b></div>
             <li><b>region:</b> AWS region (e.g.: sa-east-1)</li>
             <li><b>secretKeyId:</b> IAM user ID</li>
             <li><b>secretKey:</b>  IAM user secret</li>
