@@ -1,6 +1,7 @@
 package br.com.mpps.filehub.system;
 
 import br.com.mpps.filehub.infrastructure.config.StorageReader;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +28,8 @@ public class SystemBoot {
 
 
     @PostConstruct
-    public void inicialization() {
-        Locale.setDefault(new Locale("pt", "BR"));
+    public void initialization() {
+        Locale.setDefault(Locale.of("pt", "BR"));
         showSystemInfo();
         storageReader.loadProperties();
     }

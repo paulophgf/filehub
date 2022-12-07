@@ -141,7 +141,7 @@ public class XMLStorageReader {
     }
 
     private StorageProperties getPropertiesFromStorageNode(EnumStorageType storageType, String storageName, Element storageElement) throws InstantiationException, IllegalAccessException {
-        StorageProperties storageProperties = storageType.getPropertiesClass().newInstance();
+        StorageProperties storageProperties = storageType.getPropertiesClass().newInstance(); //TODO Verficar
         Field[] fields = storageType.getPropertiesClass().getDeclaredFields();
         for(Field field : fields) {
             if(!field.isAnnotationPresent(IgnoreProperty.class)) {

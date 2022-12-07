@@ -19,7 +19,6 @@ import org.mockito.Spy;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import javax.annotation.Resource;
-
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

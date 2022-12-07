@@ -1,8 +1,0 @@
-spring:
-  application:
-    name: 'wffile'
-  profiles:
-    active: default
-  cloud:
-    config:
-      uri: ${CONFIG_SERVER:http://localhost:9001}
