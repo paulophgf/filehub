@@ -1,17 +1,16 @@
 package br.com.mpps.filehub.infrastructure.config.reader;
 
-import br.com.mpps.filehub.domain.model.EnumConfigReaderType;
-import br.com.mpps.filehub.domain.model.config.Schema;
-import br.com.mpps.filehub.infrastructure.config.XMLStorageReader;
-import br.com.mpps.filehub.domain.interfaces.FileConfigReader;
 import br.com.mpps.filehub.domain.exceptions.PropertiesReaderException;
+import br.com.mpps.filehub.domain.interfaces.FileConfigReader;
+import br.com.mpps.filehub.domain.model.EnumConfigReaderType;
+import br.com.mpps.filehub.domain.model.config.StorageResource;
+import br.com.mpps.filehub.infrastructure.config.XMLStorageReader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Map;
 
 @Component
 public class LocalFileReader implements FileConfigReader {
@@ -25,7 +24,7 @@ public class LocalFileReader implements FileConfigReader {
     }
 
     @Override
-    public Map<String, Schema> readSchemasFromConfigurationFile() {
+    public StorageResource readSchemasFromConfigurationFile() {
         XMLStorageReader XMLStorageReader = new XMLStorageReader();
         String content = getConfigurationFileContent();
         return XMLStorageReader.read(content);

@@ -1,6 +1,6 @@
 <filehub>
     <storages>
-        <storage id="S3-Test" type="AWS_S3">
+        <storage id="S3-Test" type="AWS_S3" generate-schema="all">
             <region>us-east-2</region>
             <secretKeyId>G5FD1G66RDGFGE1</secretKeyId>
             <secretKey>6F51E6f1e651fds1ff161F61fd51s1F</secretKey>
@@ -10,9 +10,4 @@
             <baseDir>C:\Users\user\filehub</baseDir>
         </storage>
     </storages>
-    <schemas>
-        <schema name="S3-And-FileSystem" middle="FileSystem-Test">
-            <storage-id>S3-Test</storage-id>
-        </schema>
-    </schemas>
 </filehub>

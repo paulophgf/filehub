@@ -1,0 +1,7 @@
+<filehub>
+    <storages>
+        <storage id="FileSystem-Test" type="FILE_SYSTEM" generate-schema="mySchema">
+            <baseDir>C:\Users\user\filehub</baseDir>
+        </storage>
+    </storages>
+</filehub>

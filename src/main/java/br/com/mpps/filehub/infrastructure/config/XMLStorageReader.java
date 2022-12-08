@@ -2,14 +2,15 @@ package br.com.mpps.filehub.infrastructure.config;
 
 import br.com.mpps.filehub.domain.exceptions.PropertiesReaderException;
 import br.com.mpps.filehub.domain.model.IgnoreProperty;
+import br.com.mpps.filehub.domain.model.OptionalProperty;
 import br.com.mpps.filehub.domain.model.config.Schema;
 import br.com.mpps.filehub.domain.model.config.Storage;
+import br.com.mpps.filehub.domain.model.config.StorageResource;
 import br.com.mpps.filehub.domain.model.config.Trigger;
 import br.com.mpps.filehub.domain.model.storage.EnumHttpMethod;
 import br.com.mpps.filehub.domain.model.storage.EnumStorageType;
 import br.com.mpps.filehub.domain.model.storage.EnumTriggerAction;
 import br.com.mpps.filehub.domain.model.storage.StorageProperties;
-import br.com.mpps.filehub.domain.model.storage.filesystem.FileSystemProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -24,6 +25,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -31,35 +33,68 @@ import java.util.*;
 
 public class XMLStorageReader {
 
-    public Map<String, Schema> read(String xmlContent) {
-        Map<String, Schema> schemas = null;
+    public StorageResource read(String xmlContent) {
+        StorageResource resource = null;
         try {
-            schemas = buildSchemaMapFromXMLDocument(xmlContent);
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (ParserConfigurationException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (SAXException e) {
+            resource = buildSchemaMapFromXMLDocument(xmlContent);
+        } catch (InstantiationException |
+                IllegalAccessException |
+                ParserConfigurationException |
+                IOException |
+                SAXException |
+                InvocationTargetException |
+                NoSuchMethodException e) {
             e.printStackTrace();
         }
-        return schemas;
+        return resource;
     }
 
-    private Map<String, Schema> buildSchemaMapFromXMLDocument(String xmlContent)
+    private StorageResource buildSchemaMapFromXMLDocument(String xmlContent)
             throws InstantiationException, IllegalAccessException,
-            ParserConfigurationException, IOException, SAXException {
+            ParserConfigurationException, IOException, SAXException,
+            InvocationTargetException, NoSuchMethodException {
         Document document = createDocument(xmlContent);
+        NodeList storagesMainTag = document.getElementsByTagName("storages");
+        Schema autoMainSchema = getAutoSchemaFromStoragesTag(storagesMainTag);
         NodeList storageNodes = document.getElementsByTagName("storage");
-        Map<String, Storage> storages = readStorages(storageNodes);
+        Map<String, Storage> storages = readStorages(storageNodes, autoMainSchema);
         NodeList triggerNodes = document.getElementsByTagName("trigger");
         Map<String, Trigger> triggers = readTriggers(triggerNodes);
         NodeList schemaNodes = document.getElementsByTagName("schema");
-        Map<String, Schema> schemas = readSchemas(schemaNodes, storages, triggers, false); // FIXME Incluir uma nova propriedade no arquivo de configuração
-        return schemas;
+        Map<String, Schema> schemas = readSchemas(schemaNodes, storages, triggers);
+        addDefaultTriggerToSchemasWithoutTrigger(triggers, schemas);
+        return new StorageResource(storages, triggers, schemas);
+    }
+
+    private void addDefaultTriggerToSchemasWithoutTrigger(Map<String, Trigger> triggers, Map<String, Schema> schemas) {
+        Trigger defaultTrigger = triggers.get("default");
+        if(defaultTrigger != null) {
+            schemas.forEach((key, schema) -> {
+                if(!schema.hasTrigger()) {
+                    schema.setTrigger(defaultTrigger);
+                }
+            });
+        }
+    }
+
+    private Schema getAutoSchemaFromStoragesTag(NodeList storagesMainTag) {
+        if(storagesMainTag.getLength() == 0) {
+            throw new PropertiesReaderException("Storages main element not defined");
+        }
+        if(storagesMainTag.getLength() > 1) {
+            throw new PropertiesReaderException("Multiple storages main element defined");
+        }
+        Node storagesNode = storagesMainTag.item(0);
+        if(storagesNode.getNodeType() != Node.ELEMENT_NODE) {
+            throw new PropertiesReaderException("An invalid format was found in storages element");
+        }
+        Element storagesElement = (Element) storagesNode;
+        String autoSchemaName = storagesElement.getAttribute("generate-schema");
+        Schema autoSchema = null;
+        if(autoSchemaName != null && !autoSchemaName.isEmpty()) {
+            autoSchema = new Schema(autoSchemaName);
+        }
+        return autoSchema;
     }
 
     private Document createDocument(String xmlContent) throws ParserConfigurationException, IOException, SAXException {
@@ -69,7 +104,7 @@ public class XMLStorageReader {
         return documentBuilder.parse(inputSource);
     }
 
-    private Map<String, Storage> readStorages(NodeList nodes) throws InstantiationException, IllegalAccessException {
+    private Map<String, Storage> readStorages(NodeList nodes, Schema autoMainSchema) throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         Map<String, Storage> storages = new LinkedHashMap<>();
         for(int i=0; i<nodes.getLength(); i++) {
             Node storageNode = nodes.item(i);
@@ -81,9 +116,6 @@ public class XMLStorageReader {
             if(storageId.isEmpty()) {
                 throw new PropertiesReaderException("Attribute 'id' not found in storage element");
             }
-            if("ALL".equals(storageId)) {
-                throw new PropertiesReaderException("ALL is an invalid storage id");
-            }
             if(storages.containsKey(storageId)) {
                 throw new PropertiesReaderException("Duplicated id was found in storage elements: " + storageId);
             }
@@ -94,7 +126,13 @@ public class XMLStorageReader {
             EnumStorageType storageType = EnumStorageType.get(typeAttribute);
             StorageProperties properties = getPropertiesFromStorageNode(storageType, storageId, storageElement);
             Storage storage = storageType.getStorage(storageId, properties);
+            if(storageElement.hasAttribute("generate-schema")) {
+                storage.setAutoSchema(storageElement.getAttribute("generate-schema"));
+            }
             storages.put(storageId, storage);
+            if(autoMainSchema != null) {
+                autoMainSchema.getStorages().add(storage);
+            }
         }
         return storages;
     }
@@ -108,6 +146,9 @@ public class XMLStorageReader {
             }
             Element triggerElement = (Element) triggerNode;
             String triggerId = triggerElement.getAttribute("id");
+            if("default".equals(triggerId)) {
+                throw new PropertiesReaderException("Invalid value to attribute 'id': keyword 'default' is not allowed");
+            }
             if(triggerId.isEmpty()) {
                 throw new PropertiesReaderException("Attribute 'id' not found in trigger element");
             }
@@ -119,14 +160,24 @@ public class XMLStorageReader {
             if(!actionAttribute.isEmpty()) {
                 triggerAction = EnumTriggerAction.get(actionAttribute);
             }
+            boolean isTriggerDefault = checkBooleanElement(triggerId, triggerElement, "trigger", "default");
+            boolean allowDirOperations = checkBooleanElement(triggerId, triggerElement, "trigger", "no-dir");
             Trigger trigger = getPropertiesFromTriggerNode(triggerId, triggerAction, triggerElement);
+            trigger.setAllowDirOperations(allowDirOperations);
             triggers.put(triggerId, trigger);
+            if(isTriggerDefault) {
+                if(triggers.get("default") != null) {
+                    throw new PropertiesReaderException("Multiple default triggers found. Only one default trigger is allowed.");
+                }
+                triggers.put("default", trigger);
+            }
         }
         return triggers;
     }
 
     private Trigger getPropertiesFromTriggerNode(String triggerId, EnumTriggerAction triggerAction, Element triggerElement) {
         Trigger trigger = new Trigger();
+        trigger.setId(triggerId);
         trigger.setAction(triggerAction);
         String url = getSingleProperty(triggerElement, triggerId, "trigger", "url");
         String header = getSingleProperty(triggerElement, triggerId, "trigger", "header");
@@ -140,16 +191,22 @@ public class XMLStorageReader {
         return trigger;
     }
 
-    private StorageProperties getPropertiesFromStorageNode(EnumStorageType storageType, String storageName, Element storageElement) throws InstantiationException, IllegalAccessException {
-        StorageProperties storageProperties = storageType.getPropertiesClass().newInstance(); //TODO Verficar
+    private StorageProperties getPropertiesFromStorageNode(EnumStorageType storageType, String storageName, Element storageElement) throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+        StorageProperties storageProperties = storageType.getPropertiesClass().getDeclaredConstructor().newInstance();
         Field[] fields = storageType.getPropertiesClass().getDeclaredFields();
         for(Field field : fields) {
             if(!field.isAnnotationPresent(IgnoreProperty.class)) {
+                boolean isOptionalField = field.isAnnotationPresent(OptionalProperty.class);
                 NodeList propertyNode = storageElement.getElementsByTagName(field.getName());
+                String propertyValue;
                 if (propertyNode.item(0) == null) {
-                    throw new PropertiesReaderException("The property " + field.getName() + " not found in the storage " + storageName);
+                    if(!isOptionalField) {
+                        throw new PropertiesReaderException("The property " + field.getName() + " not found in the storage " + storageName);
+                    }
+                    propertyValue = field.getDeclaredAnnotation(OptionalProperty.class).defaultValue();
+                } else {
+                    propertyValue = propertyNode.item(0).getTextContent();
                 }
-                String propertyValue = propertyNode.item(0).getTextContent();
                 field.setAccessible(true);
                 field.set(storageProperties, convertStringToType(field, propertyValue));
                 field.setAccessible(false);
@@ -170,8 +227,8 @@ public class XMLStorageReader {
         return result;
     }
 
-    private Map<String, Schema> readSchemas(NodeList nodes, Map<String, Storage> storages, Map<String, Trigger> triggers, boolean includeDefault) {
-        Map<String, Schema> schemas = includeDefault ? createSchemaMapIncludingDefaultStorages(storages) : new LinkedHashMap<>();
+    private Map<String, Schema> readSchemas(NodeList nodes, Map<String, Storage> storages, Map<String, Trigger> triggers) {
+        Map<String, Schema> schemas = createSchemaMapIncludingAutoGeneratedSchemas(storages);
         for(int i=0; i<nodes.getLength(); i++) {
             Node schemaNode = nodes.item(i);
             if(schemaNode.getNodeType() != Node.ELEMENT_NODE) {
@@ -182,65 +239,51 @@ public class XMLStorageReader {
             if(schemaName.isEmpty()) {
                 throw new PropertiesReaderException("Attribute 'name' not found in schema element");
             }
-            if("ALL".equals(schemaName)) {
-                throw new PropertiesReaderException("ALL is an invalid schema name");
-            }
-            if(storages.containsKey(schemaName)) {
-                throw new PropertiesReaderException("Schema name is equals a storage id: " + schemaName);
-            }
             if(schemas.containsKey(schemaName)) {
                 throw new PropertiesReaderException("Duplicated name was found in schema elements: " + schemaName);
             }
             if(!schemaElement.hasChildNodes()) {
                 throw new PropertiesReaderException("The " + schemaName + " schema is empty");
             }
-            Trigger storageTrigger = getTriggerFromStorage(schemaElement, triggers);
+            Trigger schemaTrigger = getTriggerFromSchema(schemaElement, triggers);
+            boolean isEnabledCache = checkBooleanElement(schemaName, schemaElement, "schema", "cache");
             LinkedList<Storage> storageList = getStoragesFromSchema(schemaElement, storages);
-            schemas.put(schemaName, new Schema(schemaName, storageTrigger, storageList));
+            Storage middleStorage = getMiddleStorage(schemaElement, storages);
+            schemas.put(schemaName, new Schema(schemaName, schemaTrigger, middleStorage, storageList, isEnabledCache));
         }
         return schemas;
     }
 
-    private Map<String, Schema> createSchemaMapIncludingDefaultStorages(Map<String, Storage> storages) {
+    private Map<String, Schema> createSchemaMapIncludingAutoGeneratedSchemas(Map<String, Storage> storages) {
         Map<String, Schema> schemas = new LinkedHashMap<>();
-        Collection<Storage> schemaAll = new LinkedList<>();
         Set<String> storageKeys = storages.keySet();
         for(String key : storageKeys) {
-            List<Storage> schemaUniqueStorage = new LinkedList<>();
-            schemaAll.add(storages.get(key));
-            schemaUniqueStorage.add(storages.get(key));
-            schemas.put(key, new Schema(key, schemaUniqueStorage, true));
+            Storage storage = storages.get(key);
+            if(storage.getAutoSchema() != null) {
+                String schemaName = storage.getAutoSchema();
+                schemas.put(schemaName, new Schema(schemaName, storage));
+            }
         }
-        schemas.put("ALL", new Schema("ALL", schemaAll, false));
         return schemas;
     }
 
     private LinkedList<Storage> getStoragesFromSchema(Element schemaElement, Map<String, Storage> storages) {
         LinkedList<Storage> storageList = new LinkedList<>();
         NodeList storagesNodes = schemaElement.getElementsByTagName("storage-id");
-        Storage middleStorage = getMiddleStorage(schemaElement, storages);
         for(int i=0; i<storagesNodes.getLength(); i++) {
             String storageId = storagesNodes.item(i).getTextContent();
             Storage storage = storages.get(storageId);
             if(storage == null) {
                 throw new PropertiesReaderException("Storage with id = " + storageId + " not found");
             }
-            if(storage.equals(middleStorage)) {
-                ((FileSystemProperties) middleStorage.getProperties()).setTemporary(false);
-            } else {
-                if(!storageList.contains(storage)) {
-                    storageList.add(storage);
-                }
+            if(!storageList.contains(storage)) {
+                storageList.add(storage);
             }
-        }
-        if(middleStorage != null) {
-            middleStorage.setType(EnumStorageType.MIDDLE);
-            storageList.addFirst(middleStorage);
         }
         return storageList;
     }
 
-    private Trigger getTriggerFromStorage(Element schemaElement, Map<String, Trigger> triggers) {
+    private Trigger getTriggerFromSchema(Element schemaElement, Map<String, Trigger> triggers) {
         Trigger trigger = null;
         String triggerAttribute = schemaElement.getAttribute("trigger");
         if(triggerAttribute != null && !triggerAttribute.isEmpty()) {
@@ -256,13 +299,7 @@ public class XMLStorageReader {
         Storage middleStorage = null;
         String middleStorageId = schemaElement.getAttribute("middle");
         if(!middleStorageId.isEmpty()) {
-            Storage storage = storages.get(middleStorageId);
-            if(!EnumStorageType.FILE_SYSTEM.equals(storage.getType())) {
-                throw new PropertiesReaderException("The attribute temp needs to be FILE_SYSTEM storage type");
-            }
-            FileSystemProperties propertiesClone = ((FileSystemProperties) storage.getProperties()).clone();
-            propertiesClone.setTemporary(true);
-            middleStorage = EnumStorageType.FILE_SYSTEM.getStorage(middleStorageId, propertiesClone);
+            middleStorage = storages.get(middleStorageId);
         }
         return middleStorage;
     }
@@ -299,6 +336,18 @@ public class XMLStorageReader {
         if(!header.matches("^[a-zA-Z0-9\\-]+$")) {
             throw new PropertiesReaderException("Invalid value to header property in " + triggerId + " trigger element");
         }
+    }
+
+    private boolean checkBooleanElement(String elementName, Element element, String typeElement, String attributeName) {
+        boolean isCache = false;
+        if(element.hasAttribute(attributeName)) {
+            String value = element.getAttribute(attributeName).toLowerCase().trim();
+            if(!value.equals("true") && !value.equals("false")) {
+                throw new PropertiesReaderException("Invalid value to " + attributeName + " attribute in " + typeElement + " element: " + elementName);
+            }
+            isCache = "true".equals(value);
+        }
+        return isCache;
     }
 
 }

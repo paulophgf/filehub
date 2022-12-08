@@ -3,7 +3,7 @@ package br.com.mpps.filehub.infrastructure.config.reader;
 import br.com.mpps.filehub.domain.exceptions.PropertiesReaderException;
 import br.com.mpps.filehub.domain.interfaces.FileConfigReader;
 import br.com.mpps.filehub.domain.model.EnumConfigReaderType;
-import br.com.mpps.filehub.domain.model.config.Schema;
+import br.com.mpps.filehub.domain.model.config.StorageResource;
 import br.com.mpps.filehub.infrastructure.config.XMLStorageReader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -16,7 +16,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.util.Map;
 
 @Component
 public class GitFileReader implements FileConfigReader {
@@ -33,7 +32,7 @@ public class GitFileReader implements FileConfigReader {
     }
 
     @Override
-    public Map<String, Schema> readSchemasFromConfigurationFile() {
+    public StorageResource readSchemasFromConfigurationFile() {
         checkGitReaderParameters();
         XMLStorageReader XMLStorageReader = new XMLStorageReader();
         String content = getConfigurationFileContent();

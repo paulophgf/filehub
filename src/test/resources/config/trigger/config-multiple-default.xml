@@ -11,19 +11,25 @@
         </storage>
     </storages>
     <triggers>
-        <trigger id="myTrigger" action="UPDATE">
+        <trigger id="trigger-default" action="UPDATE" default="true">
             <url>http://localhost:9002/auth</url>
             <header>Authorization</header>
+            <http-method>GET</http-method>
+        </trigger>
+        <trigger id="trigger-another" action="ALL" default="true">
+            <url>http://localhost:9002/auth</url>
+            <header>Authorization</header>
+            <http-method>GET</http-method>
         </trigger>
     </triggers>
     <schemas>
         <schema name="S3-Only">
             <storage-id>S3-Test</storage-id>
         </schema>
-        <schema name="FileSystem-Only">
+        <schema name="FileSystem-Only" trigger="trigger-another">
             <storage-id>FileSystem-Test</storage-id>
         </schema>
-        <schema name="S3-And-FileSystem" trigger="myTrigger">
+        <schema name="S3-And-FileSystem">
             <storage-id>FileSystem-Test</storage-id>
             <storage-id>S3-Test</storage-id>
         </schema>

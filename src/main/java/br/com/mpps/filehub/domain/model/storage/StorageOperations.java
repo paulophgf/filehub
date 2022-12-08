@@ -4,6 +4,7 @@ import br.com.mpps.filehub.domain.model.Base64Upload;
 import br.com.mpps.filehub.domain.model.FileItem;
 import br.com.mpps.filehub.domain.model.FileLocation;
 import br.com.mpps.filehub.domain.model.FileMetadata;
+import br.com.mpps.filehub.domain.model.config.Schema;
 import br.com.mpps.filehub.domain.model.config.Storage;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,6 +16,8 @@ import java.util.List;
 public interface StorageOperations {
 
     boolean createDirectory(String directory);
+
+    boolean renameDirectory(String path, String name);
 
     boolean deleteDirectory(String path, boolean isRecursive);
 

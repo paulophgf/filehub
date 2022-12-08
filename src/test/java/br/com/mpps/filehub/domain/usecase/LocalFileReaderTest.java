@@ -1,11 +1,10 @@
 package br.com.mpps.filehub.domain.usecase;
 
-import br.com.mpps.filehub.domain.model.config.Schema;
 import br.com.mpps.filehub.domain.exceptions.PropertiesReaderException;
+import br.com.mpps.filehub.domain.model.config.StorageResource;
 import br.com.mpps.filehub.infrastructure.config.reader.LocalFileReader;
 import br.com.mpps.filehub.reader.XLMPropertiesReaderData;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
@@ -13,9 +12,9 @@ import org.mockito.Spy;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import javax.annotation.Resource;
-import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class LocalFileReaderTest {
 
@@ -28,17 +27,16 @@ class LocalFileReaderTest {
 
     @BeforeEach
     public void beforeEach() {
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
         data = new XLMPropertiesReaderData();
     }
 
-    @Disabled //TODO Check what the problem
     @Test
     void readSchemasFromConfigurationFile() {
         String xmlPath = "src/test/resources/config/success/config.xml";
         ReflectionTestUtils.setField(localFileReader, "localFilePath", xmlPath);
-        Map<String, Schema> model = data.createSchemasModel();
-        Map<String, Schema> schemas = localFileReader.readSchemasFromConfigurationFile();
+        StorageResource model = data.createSchemasModel();
+        StorageResource schemas = localFileReader.readSchemasFromConfigurationFile();
         assertEquals(schemas, model);
     }
 

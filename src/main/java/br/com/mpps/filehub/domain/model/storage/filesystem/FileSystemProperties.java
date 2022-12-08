@@ -1,8 +1,7 @@
 package br.com.mpps.filehub.domain.model.storage.filesystem;
 
-import br.com.mpps.filehub.domain.model.IgnoreProperty;
-import br.com.mpps.filehub.domain.model.storage.StorageProperties;
 import br.com.mpps.filehub.domain.model.storage.EnumStorageType;
+import br.com.mpps.filehub.domain.model.storage.StorageProperties;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,9 +12,6 @@ import java.util.Objects;
 public class FileSystemProperties implements StorageProperties, Cloneable {
 
     private String baseDir;
-
-    @IgnoreProperty
-    private Boolean temporary;
 
     @Override
     public EnumStorageType getType() {
@@ -38,8 +34,7 @@ public class FileSystemProperties implements StorageProperties, Cloneable {
     @Override
     public FileSystemProperties clone() {
         try {
-            FileSystemProperties clone = (FileSystemProperties) super.clone();
-            return clone;
+            return (FileSystemProperties) super.clone();
         } catch (CloneNotSupportedException e) {
             throw new AssertionError();
         }
