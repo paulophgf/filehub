@@ -39,7 +39,7 @@ class StorageReaderTest {
 
     @BeforeEach
     public void beforeEach() {
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
         data = new XLMPropertiesReaderData();
         testProperties = new TestProperties();
     }

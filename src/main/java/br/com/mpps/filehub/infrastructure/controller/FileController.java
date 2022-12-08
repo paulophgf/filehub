@@ -43,16 +43,16 @@ public class FileController {
     })
     @PostMapping(value = "/schema/{schema}/upload")
     public ResponseEntity<String> uploadMultipartFile(HttpServletRequest request,
-                                                       @ApiParam(value = "Schema name (created at XLM configuration file)", required = true)
+                                                      @ApiParam(value = "Schema name (created at XLM configuration file)", required = true)
                                                        @PathVariable("schema") String schemaId,
-                                                       @ApiParam(value = "Single multipart file", required = true)
+                                                      @ApiParam(value = "Single multipart file", required = true)
                                                        @RequestParam("file") MultipartFile file,
-                                                       @ApiParam(value = "Path separated by slash character \" / \" where the file will be saved", required = true)
+                                                      @ApiParam(value = "Path separated by slash character \" / \" where the file will be saved", required = true)
                                                        @RequestParam("path") String path,
-                                                       @ApiParam(value = "Name used to save the file. If filename is not informed, the original filename is used.\n" +
+                                                      @ApiParam(value = "Name used to save the file. If filename is not informed, the original filename is used.\n" +
                                                                "Obs.: If TRIGGER function is used, the filename returned from endpoint will be prioritized.")
                                                        @RequestParam(value = "filename", required = false) String filename,
-                                                       @ApiParam(value = "TRUE: Will create the directory path before upload the file.\n" +
+                                                      @ApiParam(value = "TRUE: Will create the directory path before upload the file.\n" +
                                                               "FALSE: Can do an error if the directory path does not exists", defaultValue = "false")
                                                        @RequestParam(value = "mkdir", required = false, defaultValue = "false") Boolean mkdir) {
         Schema schema = StorageResourceReader.getSchema(schemaId);

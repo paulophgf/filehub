@@ -25,6 +25,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -36,15 +37,13 @@ public class XMLStorageReader {
         StorageResource resource = null;
         try {
             resource = buildSchemaMapFromXMLDocument(xmlContent);
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (ParserConfigurationException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (SAXException e) {
+        } catch (InstantiationException |
+                IllegalAccessException |
+                ParserConfigurationException |
+                IOException |
+                SAXException |
+                InvocationTargetException |
+                NoSuchMethodException e) {
             e.printStackTrace();
         }
         return resource;
@@ -52,7 +51,8 @@ public class XMLStorageReader {
 
     private StorageResource buildSchemaMapFromXMLDocument(String xmlContent)
             throws InstantiationException, IllegalAccessException,
-            ParserConfigurationException, IOException, SAXException {
+            ParserConfigurationException, IOException, SAXException,
+            InvocationTargetException, NoSuchMethodException {
         Document document = createDocument(xmlContent);
         NodeList storagesMainTag = document.getElementsByTagName("storages");
         Schema autoMainSchema = getAutoSchemaFromStoragesTag(storagesMainTag);
@@ -104,7 +104,7 @@ public class XMLStorageReader {
         return documentBuilder.parse(inputSource);
     }
 
-    private Map<String, Storage> readStorages(NodeList nodes, Schema autoMainSchema) throws InstantiationException, IllegalAccessException {
+    private Map<String, Storage> readStorages(NodeList nodes, Schema autoMainSchema) throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         Map<String, Storage> storages = new LinkedHashMap<>();
         for(int i=0; i<nodes.getLength(); i++) {
             Node storageNode = nodes.item(i);
@@ -191,8 +191,8 @@ public class XMLStorageReader {
         return trigger;
     }
 
-    private StorageProperties getPropertiesFromStorageNode(EnumStorageType storageType, String storageName, Element storageElement) throws InstantiationException, IllegalAccessException {
-        StorageProperties storageProperties = storageType.getPropertiesClass().newInstance();
+    private StorageProperties getPropertiesFromStorageNode(EnumStorageType storageType, String storageName, Element storageElement) throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+        StorageProperties storageProperties = storageType.getPropertiesClass().getDeclaredConstructor().newInstance();
         Field[] fields = storageType.getPropertiesClass().getDeclaredFields();
         for(Field field : fields) {
             if(!field.isAnnotationPresent(IgnoreProperty.class)) {

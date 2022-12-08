@@ -35,7 +35,7 @@ class TriggerAuthenticationServiceTest {
 
     @BeforeEach
     public void beforeEach() {
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
         data = new XLMPropertiesReaderData();
     }
 

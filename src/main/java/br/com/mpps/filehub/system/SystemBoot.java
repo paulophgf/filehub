@@ -27,8 +27,8 @@ public class SystemBoot {
 
 
     @PostConstruct
-    public void inicialization() {
-        Locale.setDefault(new Locale("pt", "BR"));
+    public void initialization() {
+        Locale.setDefault(Locale.of("pt", "BR"));
         showSystemInfo();
         storageReader.loadProperties();
     }
