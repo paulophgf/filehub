@@ -292,7 +292,7 @@ When a trigger is configured it is necessary to inform three properties:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 In the XML configuration file, the triggers are defined inside of the **triggers** tag. A trigger should be linked 
 to a schema. That bond is created through the **trigger** attribute used in the schema tag. All storages inside the 
-schema consider the trigger on its operations.
+schema consider the trigger during its operations.
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 For clarification, see the following configuration example:
@@ -406,7 +406,7 @@ To do that, use the **default** attribute on the trigger as shown in the example
 ## Operations
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-After the understanding of the main FileHub concepts, the next step is to know which operations you can execute by the service.
+After the understanding of the main FileHub concepts, the next step is to know which operations you can execute with the service.
 
 
 <!--------------------------------------------------------------------------------------------------------------------->
@@ -458,8 +458,8 @@ two ways:
   there isn’t a specific transference order.
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-Regardless of the transference type, the upload request will only return a response after the file transference has 
-ended to all storages from the schema.
+Regardless of the transference type, the upload request will only return a response after the file transference 
+from the schema to all storages has ended.
 
 
 ### Middle-Storage
@@ -550,7 +550,7 @@ it, leaving the file saved in the first storage as well.
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 In the previous example, if a file is missing from the FileSystem-Test storage, the FileHub will check if the S3-Test 
-has the file. In the case of a positive result, the download operation will be executed, but also transferring the 
+has the file. In the case of a positive result, the download operation will be executed, but also transfer the 
 file to the FileSystem-Test. On the other hand, the FileHub will return a not found error.
 
 <br>
