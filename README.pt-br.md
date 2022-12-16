@@ -164,6 +164,26 @@ as propriedades de configuração o storage possui. Os tipos de storages são li
             <li><b>baseDir:</b> diretório raiz</li>
         </td>
       </tr>
+      <!--######################################################################################-->  
+      <tr style="background-color: transparent; border-width: 0px;"><td colspan="2"></td></tr>
+      <tr style="background-color: white; color: black">
+        <th colspan="1" style="text-align: center">
+            <img src="https://user-images.githubusercontent.com/32067860/207856945-47f8929e-8292-42fe-91d4-0a6495c264e0.png" alt="drawing" width="80"/>
+            <div>Dropbox</div>
+        </th>
+        <td colspan="1">
+            <div>Cria um link com uma conta do dropbox</div>
+            <div><b>Type:</b> DROPBOX</div>
+            <div><b>Limitação da Integração:</b> A operação de atualização do token não foi implementada.</div>
+        </td>
+      </tr>
+      <tr style="background-color: white; color: black">
+        <td colspan="2">
+            <div style="color: blue"><b>Propriedades:</b></div>
+            <li><b>accessToken:</b> token de acesso</li>
+            <li><b>baseDir:</b> diretório raiz</li>
+        </td>
+      </tr>
     </tbody>
 </table>
 
@@ -580,9 +600,9 @@ arquivo também para o FileSystem-Test, o primeiro storage consultado.
 
 -----
 
-### API Documentation
+### Documnetação da API
 
-* Run the service and access: http://localhost:8088/swagger-ui.html
-* Apiary Docs: https://filehub.docs.apiary.io
+* Execute o serviço e acesso o seguinte endpoint: http://localhost:8088/swagger-ui.html
+* Documentação no Apiary: https://filehub.docs.apiary.io
 
 -----

@@ -160,6 +160,26 @@ configuration properties the storage has. The storage types are listed next:
             <li><b>baseDir:</b> root directory</li>
         </td>
       </tr>
+      <!--######################################################################################-->  
+      <tr style="background-color: transparent; border-width: 0px;"><td colspan="2"></td></tr>
+      <tr style="background-color: white; color: black">
+        <th colspan="1" style="text-align: center">
+            <img src="https://user-images.githubusercontent.com/32067860/207856945-47f8929e-8292-42fe-91d4-0a6495c264e0.png" alt="drawing" width="80"/>
+            <div>Dropbox</div>
+        </th>
+        <td colspan="1">
+            <div>It creates a link with a dropbox account</div>
+            <div><b>Type:</b> DROPBOX</div>
+            <div><b>Limit:</b> The refresh token operation was not implemented.</div>
+        </td>
+      </tr>
+      <tr style="background-color: white; color: black">
+        <td colspan="2">
+            <div style="color: blue"><b>Properties:</b></div>
+            <li><b>accessToken:</b> access token</li>
+            <li><b>baseDir:</b> root directory</li>
+        </td>
+      </tr>
     </tbody>
 </table>
 

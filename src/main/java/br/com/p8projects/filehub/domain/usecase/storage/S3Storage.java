@@ -1,6 +1,5 @@
 package br.com.p8projects.filehub.domain.usecase.storage;
 
-import br.com.p8projects.filehub.domain.exceptions.DownloadException;
 import br.com.p8projects.filehub.domain.exceptions.StorageException;
 import br.com.p8projects.filehub.domain.exceptions.UploadException;
 import br.com.p8projects.filehub.domain.model.Base64Upload;
@@ -181,9 +180,6 @@ public class S3Storage extends Storage<S3Properties> {
     @Override
     public void transfer(Storage destination, String pathDir, List<String> filenames, Boolean mkdir) {
         AmazonS3 s3Client = authorizeOnS3();
-        if(!s3Client.doesBucketExist(properties.getBucket())) {
-            throw new DownloadException("AWS S3 Bucket not found");
-        }
         String filePath = formatDirPathToS3(pathDir);
         for(String filename : filenames) {
             executeTransfer(s3Client, destination, pathDir, filePath, filename, mkdir);
@@ -193,9 +189,6 @@ public class S3Storage extends Storage<S3Properties> {
     @Override
     public void transfer(Storage destination, FileLocation fileLocation, Boolean mkdir) {
         AmazonS3 s3Client = authorizeOnS3();
-        if(!s3Client.doesBucketExist(properties.getBucket())) {
-            throw new DownloadException("AWS S3 Bucket not found");
-        }
         String filePath = formatDirPathToS3(fileLocation.getPath());
         executeTransfer(s3Client, destination, fileLocation.getPath(), filePath, fileLocation.getFilename(), mkdir);
     }
@@ -251,9 +244,6 @@ public class S3Storage extends Storage<S3Properties> {
     @Override
     public InputStream downloadFile(String path) {
         AmazonS3 s3Client = authorizeOnS3();
-        if(!s3Client.doesBucketExist(properties.getBucket())) {
-            throw new DownloadException("AWS S3 Bucket not found");
-        }
         String filePath = formatFilePathToS3(path);
         S3Object fileObject = s3Client.getObject(properties.getBucket(), filePath);
         return fileObject.getObjectContent();
@@ -266,8 +256,8 @@ public class S3Storage extends Storage<S3Properties> {
                 .withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
                 .withRegion(properties.getRegion())
                 .build();
-        if (!s3Client.doesBucketExist(properties.getBucket())) {
-            throw new RuntimeException("O bucket " + properties.getBucket() + " não existe.");
+        if (!s3Client.doesBucketExistV2(properties.getBucket())) {
+            throw new RuntimeException("AWS S3 Bucket not found: " + properties.getBucket());
         }
         return s3Client;
     }
