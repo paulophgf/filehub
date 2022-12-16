@@ -1,9 +1,11 @@
 package br.com.p8projects.filehub.domain.model.storage;
 
 import br.com.p8projects.filehub.domain.model.config.Storage;
+import br.com.p8projects.filehub.domain.model.storage.dropbox.DropboxProperties;
 import br.com.p8projects.filehub.domain.model.storage.filesystem.FileSystemProperties;
 import br.com.p8projects.filehub.domain.model.storage.s3.S3Properties;
 import br.com.p8projects.filehub.domain.exceptions.PropertiesReaderException;
+import br.com.p8projects.filehub.domain.usecase.storage.DropboxStorage;
 import br.com.p8projects.filehub.domain.usecase.storage.FileSystemStorage;
 import br.com.p8projects.filehub.domain.usecase.storage.S3Storage;
 import lombok.Getter;
@@ -24,6 +26,14 @@ public enum EnumStorageType {
         @Override
         public Storage getStorage(String id, StorageProperties properties) {
             return new S3Storage(id, AWS_S3, (S3Properties) properties);
+        }
+
+    },
+    DROPBOX(DropboxProperties.class) {
+
+        @Override
+        public Storage getStorage(String id, StorageProperties properties) {
+            return new DropboxStorage(id, DROPBOX, (DropboxProperties) properties);
         }
 
     };
