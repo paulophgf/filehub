@@ -12,7 +12,7 @@ import java.util.Objects;
 @AllArgsConstructor
 public class StorageResource {
 
-    private Map<String, Storage> storages;
+    private Map<String, FhStorage> storages;
     private Map<String, Trigger> triggers;
     private Map<String, Schema> schemas;
 

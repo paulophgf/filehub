@@ -1,7 +1,7 @@
 package br.com.p8projects.filehub.reader;
 
 import br.com.p8projects.filehub.domain.model.config.Schema;
-import br.com.p8projects.filehub.domain.model.config.Storage;
+import br.com.p8projects.filehub.domain.model.config.FhStorage;
 import br.com.p8projects.filehub.domain.model.config.StorageResource;
 import br.com.p8projects.filehub.domain.model.config.Trigger;
 import br.com.p8projects.filehub.domain.model.storage.EnumHttpMethod;
@@ -57,21 +57,21 @@ public class XLMPropertiesReaderData {
         S3Properties s3Properties = createS3Properties();
         FileSystemProperties fsProperties = createFsProperties();
 
-        Storage<S3Properties> s3Storage = EnumStorageType.AWS_S3.getStorage("S3-Test", s3Properties);
-        Storage<FileSystemProperties> fsStorage = EnumStorageType.FILE_SYSTEM.getStorage("FileSystem-Test", fsProperties);
+        FhStorage<S3Properties> s3Storage = EnumStorageType.AWS_S3.getStorage("S3-Test", s3Properties);
+        FhStorage<FileSystemProperties> fsStorage = EnumStorageType.FILE_SYSTEM.getStorage("FileSystem-Test", fsProperties);
 
-        Collection<Storage> s3Only = Collections.singletonList(s3Storage);
+        Collection<FhStorage> s3Only = Collections.singletonList(s3Storage);
         Schema s3OnlySchema = new Schema("S3-Only", null, null, s3Only, false);
 
-        Collection<Storage> fsOnly = Collections.singletonList(fsStorage);
+        Collection<FhStorage> fsOnly = Collections.singletonList(fsStorage);
         Schema fsOnlySchema = new Schema("FileSystem-Only", null, null, fsOnly, false);
 
-        Collection<Storage> s3Andfs = new LinkedList<>();
+        Collection<FhStorage> s3Andfs = new LinkedList<>();
         s3Andfs.add(s3Storage);
         s3Andfs.add(fsStorage);
         Schema s3AndFsSchema = new Schema("S3-And-FileSystem", null, null, s3Andfs, false);
 
-        Map<String, Storage> storages = new LinkedHashMap<>();
+        Map<String, FhStorage> storages = new LinkedHashMap<>();
         storages.put("S3-Test", s3Storage);
         storages.put("FileSystem-Test", fsStorage);
 
@@ -87,17 +87,17 @@ public class XLMPropertiesReaderData {
         S3Properties s3Properties = createS3Properties();
         FileSystemProperties fsProperties = createFsProperties();
 
-        Storage<S3Properties> s3Storage = EnumStorageType.AWS_S3.getStorage("S3-Test", s3Properties);
-        Storage<FileSystemProperties> fsStorage = EnumStorageType.FILE_SYSTEM.getStorage("FileSystem-Test", fsProperties);
+        FhStorage<S3Properties> s3Storage = EnumStorageType.AWS_S3.getStorage("S3-Test", s3Properties);
+        FhStorage<FileSystemProperties> fsStorage = EnumStorageType.FILE_SYSTEM.getStorage("FileSystem-Test", fsProperties);
 
-        Collection<Storage> s3Andfs = new LinkedList<>();
+        Collection<FhStorage> s3Andfs = new LinkedList<>();
         s3Andfs.add(s3Storage);
         s3Andfs.add(fsStorage);
         Schema s3AndFsSchema = new Schema("S3-And-FileSystem", null, fsStorage, s3Andfs, false);
         s3AndFsSchema.setTemporaryMiddle(isTemporary);
         s3AndFsSchema.setTemporaryMiddle(isCache);
 
-        Map<String, Storage> storages = new LinkedHashMap<>();
+        Map<String, FhStorage> storages = new LinkedHashMap<>();
         storages.put("S3-Test", s3Storage);
         storages.put("FileSystem-Test", fsStorage);
 
@@ -109,12 +109,12 @@ public class XLMPropertiesReaderData {
 
     public StorageResource createSchemasModelWithAutoSchemaOnStorage() {
         FileSystemProperties fsProperties = createFsProperties();
-        Storage<FileSystemProperties> fsStorage = EnumStorageType.FILE_SYSTEM.getStorage("FileSystem-Test", fsProperties);
+        FhStorage<FileSystemProperties> fsStorage = EnumStorageType.FILE_SYSTEM.getStorage("FileSystem-Test", fsProperties);
 
-        Collection<Storage> fsOnly = Collections.singletonList(fsStorage);
+        Collection<FhStorage> fsOnly = Collections.singletonList(fsStorage);
         Schema mySchema = new Schema("mySchema", null, null, fsOnly, false);
 
-        Map<String, Storage> storages = new LinkedHashMap<>();
+        Map<String, FhStorage> storages = new LinkedHashMap<>();
         storages.put("FileSystem-Test", fsStorage);
 
         Map<String, Schema> schemas = new LinkedHashMap<>();
@@ -127,15 +127,15 @@ public class XLMPropertiesReaderData {
         S3Properties s3Properties = createS3Properties();
         FileSystemProperties fsProperties = createFsProperties();
 
-        Storage<S3Properties> s3Storage = EnumStorageType.AWS_S3.getStorage("S3-Test", s3Properties);
-        Storage<FileSystemProperties> fsStorage = EnumStorageType.FILE_SYSTEM.getStorage("FileSystem-Test", fsProperties);
+        FhStorage<S3Properties> s3Storage = EnumStorageType.AWS_S3.getStorage("S3-Test", s3Properties);
+        FhStorage<FileSystemProperties> fsStorage = EnumStorageType.FILE_SYSTEM.getStorage("FileSystem-Test", fsProperties);
 
-        Collection<Storage> allSchema = new LinkedList<>();
+        Collection<FhStorage> allSchema = new LinkedList<>();
         allSchema.add(s3Storage);
         allSchema.add(fsStorage);
         Schema s3AndFsSchema = new Schema("all", null, null, allSchema, false);
 
-        Map<String, Storage> storages = new LinkedHashMap<>();
+        Map<String, FhStorage> storages = new LinkedHashMap<>();
         storages.put("S3-Test", s3Storage);
         storages.put("FileSystem-Test", fsStorage);
 
@@ -149,16 +149,16 @@ public class XLMPropertiesReaderData {
         S3Properties s3Properties = createS3Properties();
         FileSystemProperties fsProperties = createFsProperties();
 
-        Storage<S3Properties> s3Storage = EnumStorageType.AWS_S3.getStorage("S3-Test", s3Properties);
-        Storage<FileSystemProperties> fsStorage = EnumStorageType.FILE_SYSTEM.getStorage("FileSystem-Test", fsProperties);
+        FhStorage<S3Properties> s3Storage = EnumStorageType.AWS_S3.getStorage("S3-Test", s3Properties);
+        FhStorage<FileSystemProperties> fsStorage = EnumStorageType.FILE_SYSTEM.getStorage("FileSystem-Test", fsProperties);
 
-        Collection<Storage> s3Only = Collections.singletonList(s3Storage);
+        Collection<FhStorage> s3Only = Collections.singletonList(s3Storage);
         Schema s3OnlySchema = new Schema("S3-Only", null, null, s3Only, false);
 
-        Collection<Storage> fsOnly = Collections.singletonList(fsStorage);
+        Collection<FhStorage> fsOnly = Collections.singletonList(fsStorage);
         Schema fsOnlySchema = new Schema("FileSystem-Only", null, null, fsOnly, false);
 
-        Collection<Storage> s3Andfs = new LinkedList<>();
+        Collection<FhStorage> s3Andfs = new LinkedList<>();
         s3Andfs.add(s3Storage);
         s3Andfs.add(fsStorage);
         Schema s3AndFsSchema = new Schema("S3-And-FileSystem", null, null, s3Andfs, false);
@@ -169,7 +169,7 @@ public class XLMPropertiesReaderData {
         Map<String, Trigger> triggers = new LinkedHashMap<>();
         triggers.put("myTrigger", trigger);
 
-        Map<String, Storage> storages = new LinkedHashMap<>();
+        Map<String, FhStorage> storages = new LinkedHashMap<>();
         storages.put("S3-Test", s3Storage);
         storages.put("FileSystem-Test", fsStorage);
 
@@ -185,20 +185,20 @@ public class XLMPropertiesReaderData {
         S3Properties s3Properties = createS3Properties();
         FileSystemProperties fsProperties = createFsProperties();
 
-        Storage<S3Properties> s3Storage = EnumStorageType.AWS_S3.getStorage("S3-Test", s3Properties);
-        Storage<FileSystemProperties> fsStorage = EnumStorageType.FILE_SYSTEM.getStorage("FileSystem-Test", fsProperties);
+        FhStorage<S3Properties> s3Storage = EnumStorageType.AWS_S3.getStorage("S3-Test", s3Properties);
+        FhStorage<FileSystemProperties> fsStorage = EnumStorageType.FILE_SYSTEM.getStorage("FileSystem-Test", fsProperties);
 
         Trigger defaultTrigger = createTrigger("trigger-default");
         Trigger anotherTrigger = createTrigger("trigger-another");
         anotherTrigger.setAction(EnumTriggerAction.ALL);
 
-        Collection<Storage> s3Only = Collections.singletonList(s3Storage);
+        Collection<FhStorage> s3Only = Collections.singletonList(s3Storage);
         Schema s3OnlySchema = new Schema("S3-Only", defaultTrigger, null, s3Only, false);
 
-        Collection<Storage> fsOnly = Collections.singletonList(fsStorage);
+        Collection<FhStorage> fsOnly = Collections.singletonList(fsStorage);
         Schema fsOnlySchema = new Schema("FileSystem-Only", anotherTrigger, null, fsOnly, false);
 
-        Collection<Storage> s3Andfs = new LinkedList<>();
+        Collection<FhStorage> s3Andfs = new LinkedList<>();
         s3Andfs.add(s3Storage);
         s3Andfs.add(fsStorage);
         Schema s3AndFsSchema = new Schema("S3-And-FileSystem", defaultTrigger, null, s3Andfs, false);
@@ -209,7 +209,7 @@ public class XLMPropertiesReaderData {
         triggers.put("default", defaultTrigger);
         triggers.put("trigger-another", anotherTrigger);
 
-        Map<String, Storage> storages = new LinkedHashMap<>();
+        Map<String, FhStorage> storages = new LinkedHashMap<>();
         storages.put("S3-Test", s3Storage);
         storages.put("FileSystem-Test", fsStorage);
 

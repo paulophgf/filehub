@@ -7,7 +7,7 @@ import br.com.p8projects.filehub.domain.model.Base64Upload;
 import br.com.p8projects.filehub.domain.model.FileItem;
 import br.com.p8projects.filehub.domain.model.FileLocation;
 import br.com.p8projects.filehub.domain.model.FileMetadata;
-import br.com.p8projects.filehub.domain.model.config.Storage;
+import br.com.p8projects.filehub.domain.model.config.FhStorage;
 import br.com.p8projects.filehub.domain.model.storage.Base64File;
 import br.com.p8projects.filehub.domain.model.storage.EnumStorageType;
 import br.com.p8projects.filehub.domain.model.storage.dropbox.DropboxProperties;
@@ -28,7 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Slf4j
-public class DropboxStorage extends Storage<DropboxProperties> {
+public class DropboxStorage extends FhStorage<DropboxProperties> {
 
     private static Map<String, DbxClientV2> dbxClientV2;
 
@@ -208,14 +208,14 @@ public class DropboxStorage extends Storage<DropboxProperties> {
     }
 
     @Override
-    public void transfer(Storage destination, FileLocation fileLocation, Boolean mkdir) {
+    public void transfer(FhStorage destination, FileLocation fileLocation, Boolean mkdir) {
         DbxClientV2 client = getClient();
         String filePath = formatDirPathToDropbox(fileLocation.getPath());
         executeTransfer(client, destination, fileLocation.getPath(), filePath, fileLocation.getFilename(), mkdir);
     }
 
     @Override
-    public void transfer(Storage destination, String pathDir, List<String> filenames, Boolean mkdir) {
+    public void transfer(FhStorage destination, String pathDir, List<String> filenames, Boolean mkdir) {
         DbxClientV2 client = getClient();
         String filePath = formatDirPathToDropbox(pathDir);
         for(String filename : filenames) {
@@ -223,7 +223,7 @@ public class DropboxStorage extends Storage<DropboxProperties> {
         }
     }
 
-    private void executeTransfer(DbxClientV2 client, Storage destination, String pathDir, String filePath, String filename, boolean mkdir) {
+    private void executeTransfer(DbxClientV2 client, FhStorage destination, String pathDir, String filePath, String filename, boolean mkdir) {
         int readByteCount;
         byte[] buffer = new byte[4096];
         try(InputStream in = client.files().downloadBuilder(filePath).start().getInputStream();

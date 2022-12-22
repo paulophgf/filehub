@@ -3,7 +3,7 @@ package br.com.p8projects.filehub.domain.usecase;
 import br.com.p8projects.filehub.domain.exceptions.NotFoundException;
 import br.com.p8projects.filehub.domain.model.EnumSynchronizationDirection;
 import br.com.p8projects.filehub.domain.model.config.Schema;
-import br.com.p8projects.filehub.domain.model.config.Storage;
+import br.com.p8projects.filehub.domain.model.config.FhStorage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +24,7 @@ public class SynchronizationService {
     }
 
 
-    public UUID start(Storage right, Storage left, EnumSynchronizationDirection direction) {
+    public UUID start(FhStorage right, FhStorage left, EnumSynchronizationDirection direction) {
         UUID key = synchronizationProgress.start(right, left);
         synchronizationManager.synchronize(right, left, direction);
         return key;

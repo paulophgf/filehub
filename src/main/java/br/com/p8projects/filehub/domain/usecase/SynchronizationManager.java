@@ -2,7 +2,7 @@ package br.com.p8projects.filehub.domain.usecase;
 
 import br.com.p8projects.filehub.domain.model.EnumSynchronizationDirection;
 import br.com.p8projects.filehub.domain.model.config.Schema;
-import br.com.p8projects.filehub.domain.model.config.Storage;
+import br.com.p8projects.filehub.domain.model.config.FhStorage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -21,7 +21,7 @@ public class SynchronizationManager {
 
 
     @Async
-    public UUID synchronize(Storage right, Storage left, EnumSynchronizationDirection direction) {
+    public UUID synchronize(FhStorage right, FhStorage left, EnumSynchronizationDirection direction) {
         //TODO
         return UUID.randomUUID();
     }

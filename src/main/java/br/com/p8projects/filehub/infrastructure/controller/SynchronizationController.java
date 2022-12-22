@@ -2,7 +2,7 @@ package br.com.p8projects.filehub.infrastructure.controller;
 
 import br.com.p8projects.filehub.domain.model.EnumSynchronizationDirection;
 import br.com.p8projects.filehub.domain.model.config.Schema;
-import br.com.p8projects.filehub.domain.model.config.Storage;
+import br.com.p8projects.filehub.domain.model.config.FhStorage;
 import br.com.p8projects.filehub.domain.usecase.SynchronizationService;
 import br.com.p8projects.filehub.infrastructure.config.StorageResourceReader;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +27,8 @@ public class SynchronizationController {
     @PostMapping(value = "/synch/storage/{right}/{left}")
     public ResponseEntity<UUID> synchronizeSchema(@PathVariable("right") String rightId,
                                                   @PathVariable("left") String leftId) {
-        Storage right = StorageResourceReader.getStorage(rightId);
-        Storage left = StorageResourceReader.getStorage(leftId);
+        FhStorage right = StorageResourceReader.getStorage(rightId);
+        FhStorage left = StorageResourceReader.getStorage(leftId);
         UUID synchId = synchronizationService.start(right, left, EnumSynchronizationDirection.BOTH);
         return ResponseEntity.ok(synchId);
     }
@@ -37,8 +37,8 @@ public class SynchronizationController {
     public ResponseEntity<UUID> synchronizeSchemaOneDirection(@PathVariable("right") String rightId,
                                                               @PathVariable("left") String leftId,
                                                               @PathVariable("direction") String direction) {
-        Storage right = StorageResourceReader.getStorage(rightId);
-        Storage left = StorageResourceReader.getStorage(leftId);
+        FhStorage right = StorageResourceReader.getStorage(rightId);
+        FhStorage left = StorageResourceReader.getStorage(leftId);
         EnumSynchronizationDirection synchDirection = EnumSynchronizationDirection.getFromString(direction);
         UUID synchId = synchronizationService.start(right, left, synchDirection);
         return ResponseEntity.ok(synchId);

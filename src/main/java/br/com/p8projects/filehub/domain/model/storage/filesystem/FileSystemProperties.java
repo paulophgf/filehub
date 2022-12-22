@@ -19,6 +19,11 @@ public class FileSystemProperties implements StorageProperties, Cloneable {
     }
 
     @Override
+    public void afterReadProperties(String storageName) {
+        // No implementation is necessary
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

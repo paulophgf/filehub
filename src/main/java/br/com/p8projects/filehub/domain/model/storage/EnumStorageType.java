@@ -1,12 +1,14 @@
 package br.com.p8projects.filehub.domain.model.storage;
 
-import br.com.p8projects.filehub.domain.model.config.Storage;
+import br.com.p8projects.filehub.domain.model.config.FhStorage;
 import br.com.p8projects.filehub.domain.model.storage.dropbox.DropboxProperties;
 import br.com.p8projects.filehub.domain.model.storage.filesystem.FileSystemProperties;
+import br.com.p8projects.filehub.domain.model.storage.google.GoogleCloudProperties;
 import br.com.p8projects.filehub.domain.model.storage.s3.S3Properties;
 import br.com.p8projects.filehub.domain.exceptions.PropertiesReaderException;
 import br.com.p8projects.filehub.domain.usecase.storage.DropboxStorage;
 import br.com.p8projects.filehub.domain.usecase.storage.FileSystemStorage;
+import br.com.p8projects.filehub.domain.usecase.storage.GoogleCloudStorage;
 import br.com.p8projects.filehub.domain.usecase.storage.S3Storage;
 import lombok.Getter;
 
@@ -16,7 +18,7 @@ public enum EnumStorageType {
     FILE_SYSTEM(FileSystemProperties.class) {
 
         @Override
-        public Storage getStorage(String id, StorageProperties properties) {
+        public FhStorage getStorage(String id, StorageProperties properties) {
             return new FileSystemStorage(id, FILE_SYSTEM, (FileSystemProperties) properties);
         }
 
@@ -24,7 +26,7 @@ public enum EnumStorageType {
     AWS_S3(S3Properties.class) {
 
         @Override
-        public Storage getStorage(String id, StorageProperties properties) {
+        public FhStorage getStorage(String id, StorageProperties properties) {
             return new S3Storage(id, AWS_S3, (S3Properties) properties);
         }
 
@@ -32,8 +34,16 @@ public enum EnumStorageType {
     DROPBOX(DropboxProperties.class) {
 
         @Override
-        public Storage getStorage(String id, StorageProperties properties) {
+        public FhStorage getStorage(String id, StorageProperties properties) {
             return new DropboxStorage(id, DROPBOX, (DropboxProperties) properties);
+        }
+
+    },
+    GOOGLE_CLOUD(GoogleCloudProperties.class) {
+
+        @Override
+        public FhStorage getStorage(String id, StorageProperties properties) {
+            return new GoogleCloudStorage(id, GOOGLE_CLOUD, (GoogleCloudProperties) properties);
         }
 
     };
@@ -56,6 +66,6 @@ public enum EnumStorageType {
         return type;
     }
 
-    public abstract Storage getStorage(String id, StorageProperties properties);
+    public abstract FhStorage getStorage(String id, StorageProperties properties);
 
 }
