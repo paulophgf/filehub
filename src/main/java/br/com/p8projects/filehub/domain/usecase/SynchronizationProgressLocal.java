@@ -2,7 +2,7 @@ package br.com.p8projects.filehub.domain.usecase;
 
 import br.com.p8projects.filehub.domain.interfaces.SynchronizationProgressControl;
 import br.com.p8projects.filehub.domain.model.config.Schema;
-import br.com.p8projects.filehub.domain.model.config.Storage;
+import br.com.p8projects.filehub.domain.model.config.FhStorage;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -24,7 +24,7 @@ public class SynchronizationProgressLocal implements SynchronizationProgressCont
     }
 
     @Override
-    public UUID start(Storage right, Storage left) {
+    public UUID start(FhStorage right, FhStorage left) {
         UUID key = UUID.randomUUID();
         synchControl.add(right.getId() + left.getId());
         percentageControl.put(key, 0f);
@@ -38,7 +38,7 @@ public class SynchronizationProgressLocal implements SynchronizationProgressCont
     }
 
     @Override
-    public boolean exists(Storage right, Storage left) {
+    public boolean exists(FhStorage right, FhStorage left) {
         String key1 = right.getId() + left.getId();
         String key2 = left.getId() + right.getId();
         return synchControl.contains(key1) || synchControl.contains(key2);

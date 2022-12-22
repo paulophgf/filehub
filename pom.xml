@@ -9,7 +9,7 @@
     <relativePath/>
   </parent>
 
-  <groupId>br.com.mpps.filehub</groupId>
+  <groupId>br.com.p8projects.filehub</groupId>
   <artifactId>FileHub</artifactId>
   <version>1.0.0</version>
   <packaging>jar</packaging>
@@ -60,7 +60,7 @@
     <dependency>
       <groupId>org.apache.tika</groupId>
       <artifactId>tika-core</artifactId>
-      <version>1.19.1</version>
+      <version>1.22</version>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -77,6 +77,12 @@
       <groupId>com.dropbox.core</groupId>
       <artifactId>dropbox-core-sdk</artifactId>
       <version>5.4.4</version>
+    </dependency>
+    <!-- Google Cloud -->
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-storage</artifactId>
+      <version>2.16.0</version>
     </dependency>
     <!-- API Docs Swagger -->
     <dependency>

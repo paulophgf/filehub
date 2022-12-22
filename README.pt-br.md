@@ -168,6 +168,31 @@ as propriedades de configuração o storage possui. Os tipos de storages são li
       <tr style="background-color: transparent; border-width: 0px;"><td colspan="2"></td></tr>
       <tr style="background-color: white; color: black">
         <th colspan="1" style="text-align: center">
+            <img src="https://user-images.githubusercontent.com/32067860/209043609-a6bacd02-19b8-4b01-9887-98a0f96ca1c1.png" alt="drawing" width="80"/>
+            <div>Google Cloud Storage</div>
+        </th>
+        <td colspan="1">
+            <div>Cria um link com um bucket do google cloud storage</div>
+            <div><b>Type:</b> GOOGLE_CLOUD</div>
+            <div><b>Limitations:</b> A informação referente ao tamanho dos diretórios está sendo retornando o valor zero</div>
+        </td>
+      </tr>
+      <tr style="background-color: white; color: black">
+        <td colspan="2">
+            <div style="color: blue"><b>Propriedades:</b></div>
+            <li>
+                <b>jsonCredentials:</b> Objeto JSON gerado por uma conta de serviço 
+                <br/>(APIs e serviços > Credenciais > Contas de serviço > Chaves) 
+                <br/>Faça o download do arquivo da chave, copie o conteúdo do arquivo (objeto JSON) e cole dentro da tag jsonCredentials
+            </li>
+            <li><b>bucket:</b> nome do bucket do storage</li>            
+            <li><b>baseDir:</b> diretório raiz</li>
+        </td>
+      </tr>
+      <!--######################################################################################-->  
+      <tr style="background-color: transparent; border-width: 0px;"><td colspan="2"></td></tr>
+      <tr style="background-color: white; color: black">
+        <th colspan="1" style="text-align: center">
             <img src="https://user-images.githubusercontent.com/32067860/207856945-47f8929e-8292-42fe-91d4-0a6495c264e0.png" alt="drawing" width="80"/>
             <div>Dropbox</div>
         </th>
@@ -356,7 +381,7 @@ para o storage **example** irá chamar a trigger para verificação de autoriza�
 O fluxograma abaixo apresenta o processo considerando a operação de **upload** para a configuração anterior.
 
 <p align="center">
-    <img src="https://user-images.githubusercontent.com/32067860/205391431-3c1d8d56-2bd8-48d1-9737-5469f3564cbb.png" alt="drawing" width="80%"/>
+    <img src="https://user-images.githubusercontent.com/32067860/209050352-160bf404-1552-4547-88a7-3dc5a5537257.png" alt="drawing" width="80%"/>
 </p>
 <p align="center">
     <sub>Fluxograma de upload de arquivo com trigger</sub>
@@ -388,7 +413,7 @@ lista de parâmetros que deverão ser utilizados para substituir partes da URL n
 sequência a seguir mostra esse processo:
 
 <p align="center">
-    <img src="https://user-images.githubusercontent.com/32067860/205391630-604078ed-1b27-4772-918a-6477f924f4e9.png" alt="drawing" width="80%"/>
+    <img src="https://user-images.githubusercontent.com/32067860/209051058-65996664-5e72-4a16-bb7b-fe8eb65d1352.png" alt="drawing" width="80%"/>
 </p>
 <p align="center">
     <sub>Diagrama de sequência do processo de comunicação com trigger</sub>

@@ -5,7 +5,7 @@ import br.com.p8projects.filehub.domain.exceptions.PropertiesReaderException;
 import br.com.p8projects.filehub.domain.interfaces.FileConfigReader;
 import br.com.p8projects.filehub.domain.model.EnumConfigReaderType;
 import br.com.p8projects.filehub.domain.model.config.Schema;
-import br.com.p8projects.filehub.domain.model.config.Storage;
+import br.com.p8projects.filehub.domain.model.config.FhStorage;
 import br.com.p8projects.filehub.domain.model.config.StorageResource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,8 +35,8 @@ public class StorageResourceReader {
         }
     }
 
-    public static Storage getStorage(String storageName) throws NotFoundException {
-        Storage storage = storageResource.getStorages().get(storageName);
+    public static FhStorage getStorage(String storageName) throws NotFoundException {
+        FhStorage storage = storageResource.getStorages().get(storageName);
         if(storage == null) {
             throw new NotFoundException("Storage not found");
         }

@@ -10,5 +10,6 @@ import java.lang.annotation.Target;
 public @interface OptionalProperty {
 
     String defaultValue() default "";
+    String group() default "default";
 
 }

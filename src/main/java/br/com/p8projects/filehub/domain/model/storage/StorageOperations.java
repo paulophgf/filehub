@@ -4,7 +4,7 @@ import br.com.p8projects.filehub.domain.model.Base64Upload;
 import br.com.p8projects.filehub.domain.model.FileItem;
 import br.com.p8projects.filehub.domain.model.FileLocation;
 import br.com.p8projects.filehub.domain.model.FileMetadata;
-import br.com.p8projects.filehub.domain.model.config.Storage;
+import br.com.p8projects.filehub.domain.model.config.FhStorage;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -36,9 +36,9 @@ public interface StorageOperations {
 
     OutputStream getOutputStreamFromStorage(String path, String filename, Boolean mkdir) throws IOException;
 
-    void transfer(Storage destination, FileLocation fileLocation, Boolean mkdir);
+    void transfer(FhStorage destination, FileLocation fileLocation, Boolean mkdir);
 
-    void transfer(Storage destination, String pathDir, List<String> filenames, Boolean mkdir);
+    void transfer(FhStorage destination, String pathDir, List<String> filenames, Boolean mkdir);
 
 
     boolean delete(String path);

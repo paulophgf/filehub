@@ -24,18 +24,22 @@ public class S3Properties implements StorageProperties {
         return EnumStorageType.AWS_S3;
     }
 
+    @Override
+    public void afterReadProperties(String storageName) {
+        setBaseDir();
+    }
+
     public String getBaseDir() {
         return baseDir != null ? baseDir : "";
     }
 
-    public void setBaseDir(String baseDir) {
+    private void setBaseDir() {
         if(baseDir.startsWith("/")) {
             baseDir = baseDir.substring(1);
         }
         if(!baseDir.endsWith("/")) {
             baseDir += "/";
         }
-        this.baseDir = baseDir;
     }
 
     @Override

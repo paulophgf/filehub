@@ -21,6 +21,10 @@ public class DropboxProperties implements StorageProperties, Cloneable {
         return EnumStorageType.DROPBOX;
     }
 
+    @Override
+    public void afterReadProperties(String storageName) {
+        // No implementation is necessary
+    }
 
     @Override
     public boolean equals(Object o) {

@@ -10,14 +10,14 @@ import java.util.Objects;
 
 @Getter
 @Setter
-public abstract class Storage<T extends StorageProperties> implements StorageOperations {
+public abstract class FhStorage<T extends StorageProperties> implements StorageOperations {
 
     protected String id;
     private EnumStorageType type;
     protected T properties;
     private String autoSchema;
 
-    public Storage(String id, EnumStorageType type, T properties) {
+    public FhStorage(String id, EnumStorageType type, T properties) {
         this.id = id;
         this.type = type;
         this.properties = properties;
@@ -27,7 +27,7 @@ public abstract class Storage<T extends StorageProperties> implements StorageOpe
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Storage storage = (Storage) o;
+        FhStorage storage = (FhStorage) o;
         return id.equals(storage.id) && type == storage.type;
     }
 

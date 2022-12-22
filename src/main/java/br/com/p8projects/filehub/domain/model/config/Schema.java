@@ -15,8 +15,8 @@ public class Schema {
 
     private String id;
     private Trigger trigger;
-    private Storage middle;
-    private Collection<Storage> storages;
+    private FhStorage middle;
+    private Collection<FhStorage> storages;
     private boolean isTemporaryMiddle;
     private boolean isCacheEnabled;
 
@@ -28,14 +28,14 @@ public class Schema {
         this.isCacheEnabled = false;
     }
 
-    public Schema(String id, Storage storage) {
+    public Schema(String id, FhStorage storage) {
         this.id = id;
         this.storages = Collections.singletonList(storage);
         this.isTemporaryMiddle = false;
         this.isCacheEnabled = false;
     }
 
-    public Schema(String id, Trigger trigger, Storage middle, Collection<Storage> storages, boolean isCacheEnabled) {
+    public Schema(String id, Trigger trigger, FhStorage middle, Collection<FhStorage> storages, boolean isCacheEnabled) {
         this.id = id;
         this.trigger = trigger;
         this.middle = middle;
@@ -57,13 +57,13 @@ public class Schema {
         }
     }
 
-    public Storage getFirstUsefulStorage() {
-        Storage storage;
+    public FhStorage getFirstUsefulStorage() {
+        FhStorage storage;
         if(middle != null) {
             if(!isTemporaryMiddle && !isCacheEnabled) {
                 storage = middle;
             } else {
-                Iterator<Storage> storageIterator = storages.iterator();
+                Iterator<FhStorage> storageIterator = storages.iterator();
                 storage = storageIterator.next();
                 if(storage.equals(middle)) {
                     storage = storageIterator.next();

@@ -6,7 +6,7 @@ import br.com.p8projects.filehub.domain.model.Base64Upload;
 import br.com.p8projects.filehub.domain.model.FileItem;
 import br.com.p8projects.filehub.domain.model.FileLocation;
 import br.com.p8projects.filehub.domain.model.FileMetadata;
-import br.com.p8projects.filehub.domain.model.config.Storage;
+import br.com.p8projects.filehub.domain.model.config.FhStorage;
 import br.com.p8projects.filehub.domain.model.storage.Base64File;
 import br.com.p8projects.filehub.domain.model.storage.EnumStorageType;
 import br.com.p8projects.filehub.domain.model.storage.filesystem.FileSystemProperties;
@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
-public class FileSystemStorage extends Storage<FileSystemProperties> {
+public class FileSystemStorage extends FhStorage<FileSystemProperties> {
 
     public FileSystemStorage(String id, EnumStorageType type, FileSystemProperties properties) {
         super(id, type, properties);
@@ -179,20 +179,20 @@ public class FileSystemStorage extends Storage<FileSystemProperties> {
 
 
     @Override
-    public void transfer(Storage destination, FileLocation fileLocation, Boolean mkdir) {
+    public void transfer(FhStorage destination, FileLocation fileLocation, Boolean mkdir) {
         String filePath = formatFilePath(fileLocation.getPath());
         executeTransfer(destination, fileLocation.getPath(), filePath, fileLocation.getFilename(), mkdir);
     }
 
     @Override
-    public void transfer(Storage destination, String pathDir, List<String> filenames, Boolean mkdir) {
+    public void transfer(FhStorage destination, String pathDir, List<String> filenames, Boolean mkdir) {
         String filePath = formatFilePath(pathDir);
         for(String filename : filenames) {
             executeTransfer(destination, pathDir, filePath, filename, mkdir);
         }
     }
 
-    private void executeTransfer(Storage destination, String pathDir, String filePath, String filename, boolean mkdir) {
+    private void executeTransfer(FhStorage destination, String pathDir, String filePath, String filename, boolean mkdir) {
         int readByteCount;
         byte[] buffer = new byte[4096];
         try(InputStream in = new FileInputStream(filePath + filename);

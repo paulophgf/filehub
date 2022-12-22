@@ -6,7 +6,7 @@ import br.com.p8projects.filehub.domain.model.Base64Upload;
 import br.com.p8projects.filehub.domain.model.FileItem;
 import br.com.p8projects.filehub.domain.model.FileLocation;
 import br.com.p8projects.filehub.domain.model.FileMetadata;
-import br.com.p8projects.filehub.domain.model.config.Storage;
+import br.com.p8projects.filehub.domain.model.config.FhStorage;
 import br.com.p8projects.filehub.domain.model.storage.Base64File;
 import br.com.p8projects.filehub.domain.model.storage.EnumStorageType;
 import br.com.p8projects.filehub.domain.model.storage.s3.S3OutputStream;
@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
-public class S3Storage extends Storage<S3Properties> {
+public class S3Storage extends FhStorage<S3Properties> {
 
     public S3Storage(String id, EnumStorageType type, S3Properties properties) {
         super(id, type, properties);
@@ -178,7 +178,7 @@ public class S3Storage extends Storage<S3Properties> {
 
 
     @Override
-    public void transfer(Storage destination, String pathDir, List<String> filenames, Boolean mkdir) {
+    public void transfer(FhStorage destination, String pathDir, List<String> filenames, Boolean mkdir) {
         AmazonS3 s3Client = authorizeOnS3();
         String filePath = formatDirPathToS3(pathDir);
         for(String filename : filenames) {
@@ -187,13 +187,13 @@ public class S3Storage extends Storage<S3Properties> {
     }
 
     @Override
-    public void transfer(Storage destination, FileLocation fileLocation, Boolean mkdir) {
+    public void transfer(FhStorage destination, FileLocation fileLocation, Boolean mkdir) {
         AmazonS3 s3Client = authorizeOnS3();
         String filePath = formatDirPathToS3(fileLocation.getPath());
         executeTransfer(s3Client, destination, fileLocation.getPath(), filePath, fileLocation.getFilename(), mkdir);
     }
 
-    private void executeTransfer(AmazonS3 s3Client, Storage destination, String pathDir, String filePath, String filename, boolean mkdir) {
+    private void executeTransfer(AmazonS3 s3Client, FhStorage destination, String pathDir, String filePath, String filename, boolean mkdir) {
         int readByteCount;
         byte[] buffer = new byte[4096];
         S3Object fileObject = s3Client.getObject(properties.getBucket(), filePath);

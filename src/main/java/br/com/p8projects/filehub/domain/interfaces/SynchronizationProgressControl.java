@@ -1,7 +1,7 @@
 package br.com.p8projects.filehub.domain.interfaces;
 
 import br.com.p8projects.filehub.domain.model.config.Schema;
-import br.com.p8projects.filehub.domain.model.config.Storage;
+import br.com.p8projects.filehub.domain.model.config.FhStorage;
 
 import java.util.UUID;
 
@@ -9,11 +9,11 @@ public interface SynchronizationProgressControl {
 
     UUID start(Schema schema);
 
-    UUID start(Storage right, Storage left);
+    UUID start(FhStorage right, FhStorage left);
 
     boolean exists(Schema schema);
 
-    boolean exists(Storage right, Storage left);
+    boolean exists(FhStorage right, FhStorage left);
 
     void updateStatus(UUID key, Float value);
 

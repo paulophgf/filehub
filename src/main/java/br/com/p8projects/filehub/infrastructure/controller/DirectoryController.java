@@ -8,6 +8,7 @@ import br.com.p8projects.filehub.domain.usecase.TriggerAuthenticationService;
 import br.com.p8projects.filehub.infrastructure.config.StorageResourceReader;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -145,7 +146,7 @@ public class DirectoryController {
         schema.checkIfIsAllowedDirectoryOperations();
         FileLocation fileLocation = triggerAuthenticationService.getFileLocation(request, schema, path, false);
         boolean existsDirectory = directoryManager.existsDirectory(schema, fileLocation.getPath());
-        return existsDirectory ? ResponseEntity.ok(true) : ResponseEntity.notFound().build();
+        return existsDirectory ? ResponseEntity.ok(true) : ResponseEntity.status(HttpStatus.NOT_FOUND).body(false);
     }
 
 }
