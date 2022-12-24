@@ -1,0 +1,7 @@
+<filehub>
+    <storages>
+        <storage id="mystorage" type="FILE_SYSTEM" generate-schema="test">
+            <baseDir>{BASE_DIR}</baseDir>
+        </storage>
+    </storages>
+</filehub>

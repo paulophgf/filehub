@@ -8,7 +8,6 @@ import br.com.p8projects.filehub.domain.model.FileLocation;
 import br.com.p8projects.filehub.domain.model.FileMetadata;
 import br.com.p8projects.filehub.domain.model.config.FhStorage;
 import br.com.p8projects.filehub.domain.model.storage.Base64File;
-import br.com.p8projects.filehub.domain.model.storage.EnumStorageType;
 import br.com.p8projects.filehub.domain.model.storage.google.GoogleCloudProperties;
 import com.google.api.gax.paging.Page;
 import com.google.auth.Credentials;
@@ -28,8 +27,8 @@ import java.util.*;
 public class GoogleCloudStorage extends FhStorage<GoogleCloudProperties> {
 
 
-    public GoogleCloudStorage(String id, EnumStorageType type, GoogleCloudProperties properties) {
-        super(id, type, properties);
+    public GoogleCloudStorage(String id, GoogleCloudProperties properties) {
+        super(id, properties);
     }
 
     // Directory Operations

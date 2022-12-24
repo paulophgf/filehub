@@ -617,3 +617,51 @@ file to the FileSystem-Test. On the other hand, the FileHub will return a not fo
 * Apiary Docs: https://filehub.docs.apiary.io
 
 -----
+
+<!--------------------------------------------------------------------------------------------------------------------->
+
+
+## Docker Configuration
+
+
+**DockerHub Link:** https://hub.docker.com/repository/docker/paulophgf/filehub
+
+
+**Docker Run Command**
+
+> docker run -d --name filehub -v {LOCAL_DIR}:/filehub paulophgf/filehub:{FILEHUB_VERSION}
+
+Example:
+````shell
+docker run -d --name filehub -v //c/Users/user/filehub:/filehub paulophgf/filehub:1.0.0
+````
+
+**Compose**
+````yaml
+version: '3.1'
+
+services:
+
+  filehub:
+    image: paulophgf/filehub:1.0.0
+    hostname: filehub
+    container_name: filehub
+    restart: always
+    networks:
+      - filehub-default
+    ports:
+      - "8088:8088"
+    volumes:
+      - {LOCAL_DIR}:/etc/hosts:ro
+    environment:
+      CONFIG_TYPE: "[LOCAL_FILE | GIT_FILE]" # Choose one option
+      LOCAL_FILE_PATH: "{LOCAL_DIR_PATH}" # Replace the variable value
+      CONFIG_GIT_FILE_PATH: "{GIT_FILE_URL}" # Replace the variable value
+      CONFIG_GIT_FILE_TOKEN: "{GIT_FILE_TOKEN}" # Replace the variable value
+      JAVA_OPTS : "-Xms512m -Xmx1024m"
+
+networks:
+  filehub-default:
+    external:
+      name: filehub-default
+````

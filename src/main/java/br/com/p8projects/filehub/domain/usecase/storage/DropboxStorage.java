@@ -9,7 +9,6 @@ import br.com.p8projects.filehub.domain.model.FileLocation;
 import br.com.p8projects.filehub.domain.model.FileMetadata;
 import br.com.p8projects.filehub.domain.model.config.FhStorage;
 import br.com.p8projects.filehub.domain.model.storage.Base64File;
-import br.com.p8projects.filehub.domain.model.storage.EnumStorageType;
 import br.com.p8projects.filehub.domain.model.storage.dropbox.DropboxProperties;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.dropbox.core.DbxException;
@@ -33,8 +32,8 @@ public class DropboxStorage extends FhStorage<DropboxProperties> {
     private static Map<String, DbxClientV2> dbxClientV2;
 
 
-    public DropboxStorage(String id, EnumStorageType type, DropboxProperties properties) {
-        super(id, type, properties);
+    public DropboxStorage(String id, DropboxProperties properties) {
+        super(id, properties);
         if(dbxClientV2 == null) {
             dbxClientV2 = new HashMap<>();
         }

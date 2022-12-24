@@ -8,7 +8,6 @@ import br.com.p8projects.filehub.domain.model.FileLocation;
 import br.com.p8projects.filehub.domain.model.FileMetadata;
 import br.com.p8projects.filehub.domain.model.config.FhStorage;
 import br.com.p8projects.filehub.domain.model.storage.Base64File;
-import br.com.p8projects.filehub.domain.model.storage.EnumStorageType;
 import br.com.p8projects.filehub.domain.model.storage.s3.S3OutputStream;
 import br.com.p8projects.filehub.domain.model.storage.s3.S3Properties;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
@@ -31,8 +30,8 @@ import java.util.List;
 
 public class S3Storage extends FhStorage<S3Properties> {
 
-    public S3Storage(String id, EnumStorageType type, S3Properties properties) {
-        super(id, type, properties);
+    public S3Storage(String id, S3Properties properties) {
+        super(id, properties);
     }
 
     // Directory Operations

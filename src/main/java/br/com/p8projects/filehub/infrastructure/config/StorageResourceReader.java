@@ -4,17 +4,15 @@ import br.com.p8projects.filehub.domain.exceptions.NotFoundException;
 import br.com.p8projects.filehub.domain.exceptions.PropertiesReaderException;
 import br.com.p8projects.filehub.domain.interfaces.FileConfigReader;
 import br.com.p8projects.filehub.domain.model.EnumConfigReaderType;
-import br.com.p8projects.filehub.domain.model.config.Schema;
 import br.com.p8projects.filehub.domain.model.config.FhStorage;
+import br.com.p8projects.filehub.domain.model.config.Schema;
 import br.com.p8projects.filehub.domain.model.config.StorageResource;
+import br.com.p8projects.filehub.system.SystemProperties;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class StorageResourceReader {
-
-    @Value("${filehub.config.type}") private String configType;
 
     public PropertiesReaderFactory propertiesReaderFactory;
     private static StorageResource storageResource;
@@ -25,13 +23,13 @@ public class StorageResourceReader {
         this.propertiesReaderFactory = propertiesReaderFactory;
     }
 
-    public void loadProperties() {
+    public void loadProperties(SystemProperties properties) {
         try {
-            EnumConfigReaderType configReaderType = EnumConfigReaderType.valueOf(configType);
+            EnumConfigReaderType configReaderType = EnumConfigReaderType.valueOf(properties.getConfigType());
             FileConfigReader fileConfigReader = propertiesReaderFactory.findStrategy(configReaderType);
             storageResource = fileConfigReader.readSchemasFromConfigurationFile();
         } catch (IllegalArgumentException e) {
-            throw new PropertiesReaderException("Invalid type of configuration reader: " + configType);
+            throw new PropertiesReaderException("Invalid type of configuration reader: " + properties.getConfigType());
         }
     }
 
