@@ -11,4 +11,6 @@ public class SystemProperties {
     @Value("${server.port}") private String appPort;
     @Value("${system.version}") private String systemVersion;
 
+    @Value("${filehub.config.type}") private String configType;
+
 }

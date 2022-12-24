@@ -8,6 +8,7 @@ import br.com.p8projects.filehub.infrastructure.config.StorageResourceReader;
 import br.com.p8projects.filehub.infrastructure.config.reader.GitFileReader;
 import br.com.p8projects.filehub.infrastructure.config.reader.LocalFileReader;
 import br.com.p8projects.filehub.reader.XLMPropertiesReaderData;
+import br.com.p8projects.filehub.system.SystemProperties;
 import br.com.p8projects.filehub.test.TestProperties;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +31,9 @@ class StorageReaderTest {
     @Mock
     private PropertiesReaderFactory propertiesReaderFactory;
 
+    @Mock
+    private SystemProperties systemProperties;
+
     @Spy
     @Resource
     @InjectMocks
@@ -43,6 +47,7 @@ class StorageReaderTest {
         MockitoAnnotations.openMocks(this);
         data = new XLMPropertiesReaderData();
         testProperties = new TestProperties();
+        systemProperties = new SystemProperties();
     }
 
 
@@ -51,10 +56,10 @@ class StorageReaderTest {
     void loadPropertiesFromLocalFile() {
         StorageResource model = data.createSchemasModel();
         LocalFileReader localFileReader = new LocalFileReader();
-        ReflectionTestUtils.setField(storageReader, "configType", "LOCAL_FILE");
+        ReflectionTestUtils.setField(systemProperties, "configType", "LOCAL_FILE");
         ReflectionTestUtils.setField(localFileReader, "localFilePath", "src/test/resources/config/success/config.xml");
         when(propertiesReaderFactory.findStrategy(EnumConfigReaderType.LOCAL_FILE)).thenReturn(localFileReader);
-        storageReader.loadProperties();
+        storageReader.loadProperties(systemProperties);
         Assertions.assertEquals(StorageResourceReader.getStorageResource(), model);
     }
 
@@ -63,19 +68,19 @@ class StorageReaderTest {
     void loadPropertiesFromGitRepository() {
         StorageResource model = data.createSchemasModel();
         GitFileReader gitFileReader = new GitFileReader();
-        ReflectionTestUtils.setField(storageReader, "configType", "GIT_FILE");
+        ReflectionTestUtils.setField(systemProperties, "configType", "GIT_FILE");
         ReflectionTestUtils.setField(gitFileReader, "fileURL", testProperties.getGitRepositoryUrl());
         ReflectionTestUtils.setField(gitFileReader, "accessToken", testProperties.getGitRepositoryToken());
         when(propertiesReaderFactory.findStrategy(EnumConfigReaderType.GIT_FILE)).thenReturn(gitFileReader);
-        storageReader.loadProperties();
+        storageReader.loadProperties(systemProperties);
         Assertions.assertEquals(StorageResourceReader.getStorageResource(), model);
     }
 
     @Test
     void loadPropertiesInvalidType() {
-        ReflectionTestUtils.setField(storageReader, "configType", "XPTO");
+        ReflectionTestUtils.setField(systemProperties, "configType", "XPTO");
         Throwable exception = assertThrows(PropertiesReaderException.class,
-                () -> storageReader.loadProperties()
+                () -> storageReader.loadProperties(systemProperties)
         );
         String expectedMessage = "Invalid type of configuration reader: XPTO";
         assertEquals(expectedMessage, exception.getMessage());

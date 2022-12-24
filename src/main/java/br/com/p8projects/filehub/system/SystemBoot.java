@@ -30,7 +30,8 @@ public class SystemBoot {
     public void initialization() {
         Locale.setDefault(Locale.of("pt", "BR"));
         showSystemInfo();
-        storageReader.loadProperties();
+        storageReader.loadProperties(properties);
+        printStorages();
     }
 
     private void showSystemInfo() {
@@ -44,8 +45,19 @@ public class SystemBoot {
                 "#--------------- SYSTEM STARTED ---------------#" +
                 "\nCurrent Date: " + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()) +
                 "\nRunning on port: " + properties.getAppPort() +
-                "\nVersion: " + properties.getSystemVersion();
+                "\nVersion: " + properties.getSystemVersion() +
+                "\nStorage Reader Type: " + properties.getConfigType();
         logger.info(logo);
+    }
+
+    private void printStorages() {
+        StringBuilder storages = new StringBuilder();
+        storages.append("\n------------------------------------------------");
+        storages.append("\nCONFIGURED STORAGES:\n");
+        StorageResourceReader.getStorageResource().getStorages().forEach(
+            (k, v) -> storages.append("+ ").append(k).append(": ").append(v.getType().name()).append("\n")
+        );
+        logger.info(storages.toString());
     }
 
 }

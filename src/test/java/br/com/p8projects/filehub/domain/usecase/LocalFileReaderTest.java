@@ -41,16 +41,6 @@ class LocalFileReaderTest {
     }
 
     @Test
-    void readSchemasFromConfigurationFilePathNotInformed() {
-        ReflectionTestUtils.setField(localFileReader, "localFilePath", null);
-        Throwable exception = assertThrows(PropertiesReaderException.class,
-                () -> localFileReader.readSchemasFromConfigurationFile()
-        );
-        String expectedMessage = "Path not informed to local file reader";
-        assertEquals(expectedMessage, exception.getMessage());
-    }
-
-    @Test
     void readSchemasFromConfigurationFileNotFound() {
         ReflectionTestUtils.setField(localFileReader, "localFilePath", "src/test/resources/config/not-found.xml");
         Throwable exception = assertThrows(PropertiesReaderException.class,

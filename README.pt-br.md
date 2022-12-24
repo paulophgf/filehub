@@ -625,9 +625,55 @@ arquivo também para o FileSystem-Test, o primeiro storage consultado.
 
 -----
 
-### Documnetação da API
+### Documentação da API
 
 * Execute o serviço e acesso o seguinte endpoint: http://localhost:8088/swagger-ui.html
 * Documentação no Apiary: https://filehub.docs.apiary.io
 
 -----
+
+
+## Configuração Docker
+
+
+**Link do DockerHub:** https://hub.docker.com/repository/docker/paulophgf/filehub
+
+
+**Comando Docker Run** 
+
+> docker run -d --name filehub -v {LOCAL_DIR}:/filehub paulophgf/filehub:{FILEHUB_VERSION}
+
+Exemplo:
+````shell
+docker run -d --name filehub -v //c/Users/user/filehub:/filehub paulophgf/filehub:1.0.0
+````
+
+**Compose**
+````yaml
+version: '3.1'
+
+services:
+
+  filehub:
+    image: paulophgf/filehub:1.0.0
+    hostname: filehub
+    container_name: filehub
+    restart: always
+    networks:
+      - filehub-default
+    ports:
+      - "8088:8088"
+    volumes:
+      - {LOCAL_DIR}:/etc/hosts:ro
+    environment:
+      CONFIG_TYPE: "[LOCAL_FILE | GIT_FILE]" # Escolha umas das opções
+      LOCAL_FILE_PATH: "{LOCAL_DIR_PATH}" # Substitua o valor da variável
+      CONFIG_GIT_FILE_PATH: "{GIT_FILE_URL}" # Substitua o valor da variável
+      CONFIG_GIT_FILE_TOKEN: "{GIT_FILE_TOKEN}" # Substitua o valor da variável
+      JAVA_OPTS : "-Xms512m -Xmx1024m"
+
+networks:
+  filehub-default:
+    external:
+      name: filehub-default
+````

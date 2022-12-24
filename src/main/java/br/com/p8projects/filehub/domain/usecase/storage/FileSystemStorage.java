@@ -8,7 +8,6 @@ import br.com.p8projects.filehub.domain.model.FileLocation;
 import br.com.p8projects.filehub.domain.model.FileMetadata;
 import br.com.p8projects.filehub.domain.model.config.FhStorage;
 import br.com.p8projects.filehub.domain.model.storage.Base64File;
-import br.com.p8projects.filehub.domain.model.storage.EnumStorageType;
 import br.com.p8projects.filehub.domain.model.storage.filesystem.FileSystemProperties;
 import org.apache.commons.io.FileUtils;
 import org.springframework.util.FileSystemUtils;
@@ -26,8 +25,8 @@ import java.util.List;
 
 public class FileSystemStorage extends FhStorage<FileSystemProperties> {
 
-    public FileSystemStorage(String id, EnumStorageType type, FileSystemProperties properties) {
-        super(id, type, properties);
+    public FileSystemStorage(String id, FileSystemProperties properties) {
+        super(id, properties);
     }
 
     // Directory Operations

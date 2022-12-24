@@ -4,7 +4,9 @@ import br.com.p8projects.filehub.domain.exceptions.PropertiesReaderException;
 import br.com.p8projects.filehub.domain.interfaces.FileConfigReader;
 import br.com.p8projects.filehub.domain.model.EnumConfigReaderType;
 import br.com.p8projects.filehub.domain.model.config.StorageResource;
+import br.com.p8projects.filehub.infrastructure.config.LocalDefaultFileReader;
 import br.com.p8projects.filehub.infrastructure.config.XMLStorageReader;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +14,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+@Slf4j
 @Component
 public class LocalFileReader implements FileConfigReader {
 
@@ -31,8 +34,9 @@ public class LocalFileReader implements FileConfigReader {
     }
 
     private String getConfigurationFileContent() {
-        if(localFilePath == null || localFilePath.trim().isEmpty()) {
-            throw new PropertiesReaderException("Path not informed to local file reader");
+        if("DEFAULT".equals(localFilePath)) {
+            log.warn("Environment variable LOCAL_FILE_PATH not informed");
+            localFilePath = new LocalDefaultFileReader().createLocalDefaultConfigFile();
         }
         String content;
         try {

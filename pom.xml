@@ -20,7 +20,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <start-class>br.com.p8projects.filehub.Main</start-class>
-    <java.version>1.19</java.version>
+    <java.version>19</java.version>
   </properties>
 
   <dependencies>

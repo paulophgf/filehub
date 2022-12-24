@@ -19,7 +19,7 @@ public enum EnumStorageType {
 
         @Override
         public FhStorage getStorage(String id, StorageProperties properties) {
-            return new FileSystemStorage(id, FILE_SYSTEM, (FileSystemProperties) properties);
+            return new FileSystemStorage(id, (FileSystemProperties) properties);
         }
 
     },
@@ -27,15 +27,7 @@ public enum EnumStorageType {
 
         @Override
         public FhStorage getStorage(String id, StorageProperties properties) {
-            return new S3Storage(id, AWS_S3, (S3Properties) properties);
-        }
-
-    },
-    DROPBOX(DropboxProperties.class) {
-
-        @Override
-        public FhStorage getStorage(String id, StorageProperties properties) {
-            return new DropboxStorage(id, DROPBOX, (DropboxProperties) properties);
+            return new S3Storage(id, (S3Properties) properties);
         }
 
     },
@@ -43,7 +35,15 @@ public enum EnumStorageType {
 
         @Override
         public FhStorage getStorage(String id, StorageProperties properties) {
-            return new GoogleCloudStorage(id, GOOGLE_CLOUD, (GoogleCloudProperties) properties);
+            return new GoogleCloudStorage(id, (GoogleCloudProperties) properties);
+        }
+
+    },
+    DROPBOX(DropboxProperties.class) {
+
+        @Override
+        public FhStorage getStorage(String id, StorageProperties properties) {
+            return new DropboxStorage(id, (DropboxProperties) properties);
         }
 
     };

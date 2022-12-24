@@ -17,9 +17,9 @@ public abstract class FhStorage<T extends StorageProperties> implements StorageO
     protected T properties;
     private String autoSchema;
 
-    public FhStorage(String id, EnumStorageType type, T properties) {
+    public FhStorage(String id, T properties) {
         this.id = id;
-        this.type = type;
+        this.type = properties.getType();
         this.properties = properties;
     }
 
