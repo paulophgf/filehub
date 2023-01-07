@@ -23,7 +23,28 @@ public class DropboxProperties implements StorageProperties, Cloneable {
 
     @Override
     public void afterReadProperties(String storageName) {
-        // No implementation is necessary
+        checkBaseDir();
+    }
+
+    private void checkBaseDir() {
+        if(baseDir == null) {
+            baseDir = "";
+        }
+        if(!"".equals(baseDir)) {
+            if (!baseDir.startsWith("/")) {
+                baseDir = "/" + baseDir;
+            }
+            if (baseDir.endsWith("/")) {
+                baseDir = baseDir.substring(0, baseDir.length()-1);
+            }
+        }
+    }
+
+    public String formatDirPath(String path) {
+        if("/".equals(path)) {
+            path = "";
+        }
+        return baseDir + path;
     }
 
     @Override

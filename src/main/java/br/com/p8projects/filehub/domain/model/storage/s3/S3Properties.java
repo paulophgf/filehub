@@ -29,17 +29,38 @@ public class S3Properties implements StorageProperties {
         setBaseDir();
     }
 
-    public String getBaseDir() {
-        return baseDir != null ? baseDir : "";
+    private void setBaseDir() {
+        if(baseDir == null) {
+            baseDir = "";
+        }
+        if(!"".equals(baseDir)) {
+            if (baseDir.startsWith("/")) {
+                baseDir = baseDir.substring(1);
+            }
+            if (!baseDir.endsWith("/")) {
+                baseDir += "/";
+            }
+        }
     }
 
-    private void setBaseDir() {
-        if(baseDir.startsWith("/")) {
-            baseDir = baseDir.substring(1);
+    public String formatDirPath(String path) {
+        if(path.startsWith("/")) {
+            path = path.substring(1);
         }
-        if(!baseDir.endsWith("/")) {
-            baseDir += "/";
+        if(!path.endsWith("/")) {
+            path += "/";
         }
+        if("/".equals(path) && !"".equals(baseDir)) {
+            path = "";
+        }
+        return baseDir + path;
+    }
+
+    public String formatFilePath(String path) {
+        if(path.startsWith("/")) {
+            path = path.substring(1);
+        }
+        return baseDir + path;
     }
 
     @Override

@@ -62,6 +62,9 @@ public class XMLStorageReader {
         Map<String, Trigger> triggers = readTriggers(triggerNodes);
         NodeList schemaNodes = document.getElementsByTagName("schema");
         Map<String, Schema> schemas = readSchemas(schemaNodes, storages, triggers);
+        if(autoMainSchema != null) {
+            schemas.put(autoMainSchema.getId(), autoMainSchema);
+        }
         addDefaultTriggerToSchemasWithoutTrigger(triggers, schemas);
         return new StorageResource(storages, triggers, schemas);
     }

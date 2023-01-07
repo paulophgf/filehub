@@ -23,6 +23,16 @@ public class FileSystemProperties implements StorageProperties, Cloneable {
         // No implementation is necessary
     }
 
+    public static String formatDirPath(String path) {
+        if(!path.startsWith("/")) {
+            path = "/" + path;
+        }
+        if(path.endsWith("/")) {
+            path = path.substring(0, path.length()-1);
+        }
+        return path;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
