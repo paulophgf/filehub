@@ -279,8 +279,8 @@ with all existing storages. See the example below:
 
 ````xml
 <filehub>
-    <storages>
-        <storage id="S3-Test" type="AWS_S3" generate-schema="s3test">
+    <storages generate-schema="all">
+        <storage id="S3-Test" type="AWS_S3">
             <region>us-east-2</region>
             <secretKeyId>G5HG4G66RDYIYE1</secretKeyId>
             <secretKey>6F51E6f1e6F7A2E4F761F61fd51s1F</secretKey>
@@ -652,7 +652,8 @@ services:
     ports:
       - "8088:8088"
     volumes:
-      - {LOCAL_DIR}:/etc/hosts:ro
+      - /etc/hosts:/etc/hosts:ro
+      - {LOCAL_DIR}:/filehub
     environment:
       CONFIG_TYPE: "[LOCAL_FILE | GIT_FILE]" # Choose one option
       LOCAL_FILE_PATH: "{LOCAL_DIR_PATH}" # Replace the variable value

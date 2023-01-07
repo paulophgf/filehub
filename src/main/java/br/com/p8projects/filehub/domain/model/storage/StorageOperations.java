@@ -14,6 +14,8 @@ import java.util.List;
 
 public interface StorageOperations {
 
+    void createBaseDirIfNotExist();
+
     boolean createDirectory(String directory);
 
     boolean renameDirectory(String path, String name);

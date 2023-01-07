@@ -32,8 +32,16 @@ public class FileSystemStorage extends FhStorage<FileSystemProperties> {
     // Directory Operations
 
     @Override
+    public void createBaseDirIfNotExist() {
+        File file = new File(properties.getBaseDir());
+        if(!file.exists() || (file.exists() && !file.isDirectory())) {
+            file.mkdirs();
+        }
+    }
+
+    @Override
     public boolean createDirectory(String directory) {
-        String pathDir = FileSystemStorage.formatDirPathToSF(directory);
+        String pathDir = properties.formatDirPath(directory);
         Boolean result = false;
         String filePath = formatFilePath(pathDir);
         File dir = new File(filePath);
@@ -45,12 +53,13 @@ public class FileSystemStorage extends FhStorage<FileSystemProperties> {
 
     @Override
     public boolean renameDirectory(String path, String name) {
-        String pathDir = FileSystemStorage.formatDirPathToSF(path);
+        String pathDir = properties.formatDirPath(path);
         Boolean result = false;
         File file = new File(formatFilePath(pathDir));
         if(file.exists() && file.isDirectory()) {
-            Path ditPath = Paths.get(path);
-            String newPath = ditPath.getParent() + File.separator + name;
+            Path dirPath = Paths.get(path);
+            String newPath = dirPath.getParent() + File.separator + name;
+            newPath = properties.getBaseDir() + newPath;
             result = file.renameTo(new File(newPath));
         }
         return result;
@@ -58,7 +67,7 @@ public class FileSystemStorage extends FhStorage<FileSystemProperties> {
 
     @Override
     public boolean deleteDirectory(String path, boolean isRecursive) {
-        String pathDir = FileSystemStorage.formatDirPathToSF(path);
+        String pathDir = properties.formatDirPath(path);
         Boolean result = false;
         File file = new File(formatFilePath(pathDir));
         if(file.exists() && file.isDirectory()) {
@@ -77,7 +86,7 @@ public class FileSystemStorage extends FhStorage<FileSystemProperties> {
 
     @Override
     public List<FileItem> listFiles(String path) {
-        String pathDir = FileSystemStorage.formatDirPathToSF(path);
+        String pathDir = properties.formatDirPath(path);
         String filePath = formatFilePath(pathDir);
         File dir = new File(filePath);
         if(!dir.isDirectory()) {
@@ -262,16 +271,6 @@ public class FileSystemStorage extends FhStorage<FileSystemProperties> {
             }
             createDirectory(pathDir);
         }
-    }
-
-    private static String formatDirPathToSF(String path) {
-        if(!path.startsWith("/")) {
-            path = "/" + path;
-        }
-        if(path.endsWith("/")) {
-            path = path.substring(0, path.length()-1);
-        }
-        return path;
     }
 
     private String formatFilePath(String path) {

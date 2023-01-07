@@ -28,6 +28,7 @@ public class StorageResourceReader {
             EnumConfigReaderType configReaderType = EnumConfigReaderType.valueOf(properties.getConfigType());
             FileConfigReader fileConfigReader = propertiesReaderFactory.findStrategy(configReaderType);
             storageResource = fileConfigReader.readSchemasFromConfigurationFile();
+            storageResource.createBaseDirIfNotExist();
         } catch (IllegalArgumentException e) {
             throw new PropertiesReaderException("Invalid type of configuration reader: " + properties.getConfigType());
         }

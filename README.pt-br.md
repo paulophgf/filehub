@@ -285,8 +285,8 @@ storages existentes. Veja o exemplo abaixo:
 
 ````xml
 <filehub>
-    <storages>
-        <storage id="S3-Test" type="AWS_S3" generate-schema="s3test">
+    <storages generate-schema="all">
+        <storage id="S3-Test" type="AWS_S3">
             <region>us-east-2</region>
             <secretKeyId>G5HG4G66RDYIYE1</secretKeyId>
             <secretKey>6F51E6f1e6F7A2E4F761F61fd51s1F</secretKey>

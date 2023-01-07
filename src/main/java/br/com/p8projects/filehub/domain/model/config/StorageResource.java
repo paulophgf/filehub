@@ -17,6 +17,10 @@ public class StorageResource {
     private Map<String, Schema> schemas;
 
 
+    public void createBaseDirIfNotExist() {
+        storages.forEach((k, v) -> v.createBaseDirIfNotExist());
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
