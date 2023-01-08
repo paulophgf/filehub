@@ -1,11 +1,11 @@
 package br.com.p8projects.filehub.domain.usecase;
 
 import br.com.p8projects.filehub.domain.exceptions.UploadException;
-import br.com.p8projects.filehub.domain.model.Base64Upload;
-import br.com.p8projects.filehub.domain.model.FileLocation;
-import br.com.p8projects.filehub.domain.model.FileMetadata;
+import br.com.p8projects.filehub.domain.model.*;
 import br.com.p8projects.filehub.domain.model.config.Schema;
 import br.com.p8projects.filehub.domain.model.config.FhStorage;
+import br.com.p8projects.filehub.domain.model.upload.UploadBase64Object;
+import br.com.p8projects.filehub.domain.model.upload.UploadMultipartObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,39 +17,25 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class FileManager {
 
-    public void upload(Schema schema, FileLocation fileLocation, MultipartFile file, Boolean mkdir) {
-        log.info("UPLOAD SINGLE FILE USING MULTIPART FILE");
-        uploadSequential(schema, fileLocation, file, mkdir);
-    }
-
-    public void upload(Schema schema, String path, MultipartFile[] files, Boolean mkdir, Boolean parallel) {
+    public void upload(UploadMultipartObject uploadMultipartObject) {
         log.info("UPLOAD MULTIPLE FILE USING MULTIPART FILE");
-        if(parallel) {
-            uploadParallel(schema, path, files, mkdir);
+        if(uploadMultipartObject.getSchema().isParallelUpload()) {
+            //uploadParallel(schema, path, files, mkdir);
         } else {
-            uploadSequential(schema, path, files, mkdir);
+            uploadSequential(uploadMultipartObject);
         }
     }
 
-    public void uploadBase64(Schema schema, FileLocation fileLocation, Base64Upload file, Boolean mkdir) {
-        log.info("UPLOAD SINGLE FILE USING BASE 64 FILE");
-        Collection<FhStorage> storages = schema.getStorages();
-        for(FhStorage storage : storages) {
-            storage.uploadBase64(fileLocation, file, mkdir);
-        }
-    }
-
-    public void uploadBase64(Schema schema, String path, Base64Upload[] files, Boolean mkdir) {
+    public void uploadBase64(UploadBase64Object uploadBase64Object) {
         log.info("UPLOAD MULTIPLE FILE USING BASE 64 FILE");
-        Collection<FhStorage> storages = schema.getStorages();
+        Collection<FhStorage> storages = uploadBase64Object.getSchema().getStorages();
         for(FhStorage storage : storages) {
-            storage.uploadBase64(path, files, mkdir);
+            storage.uploadBase64(uploadBase64Object);
         }
     }
 
@@ -123,40 +109,22 @@ public class FileManager {
 
 
 
-    private void uploadSequential(Schema schema, String path, MultipartFile[] files, Boolean mkdir) {
+    private void uploadSequential(UploadMultipartObject uploadMultipartObject) {
         log.info("SEQUENTIAL");
-        Collection<FhStorage> storages = schema.getStorages();
-        if(schema.getMiddle() != null) {
+        Collection<FhStorage> storages = uploadMultipartObject.getSchema().getStorages();
+        if(uploadMultipartObject.getSchema().getMiddle() != null) {
             log.info("MIDDLE MODE");
-            schema.getMiddle().upload(path, files, mkdir);
-            List<String> filenames = Arrays.stream(files).map(MultipartFile::getOriginalFilename).collect(Collectors.toList());
+            FhStorage middle = uploadMultipartObject.getSchema().getMiddle();
+            middle.upload(uploadMultipartObject);
             new Thread(() -> {
-                storages.remove(schema.getMiddle());
+                storages.remove(middle);
                 for (FhStorage storage : storages) {
-                    schema.getMiddle().transfer(storage, path, filenames, mkdir);
+                    middle.transfer(storage, uploadMultipartObject);
                 }
             }).start();
         } else {
             for (FhStorage storage : storages) {
-                storage.upload(path, files, mkdir);
-            }
-        }
-    }
-
-    private void uploadSequential(Schema schema, FileLocation fileLocation, MultipartFile file, Boolean mkdir) {
-        Collection<FhStorage> storages = schema.getStorages();
-        if(schema.getMiddle() != null) {
-            log.info("MIDDLE MODE");
-            schema.getMiddle().upload(fileLocation, file, mkdir);
-            new Thread(() -> {
-                storages.remove(schema.getMiddle());
-                for (FhStorage storage : storages) {
-                    schema.getMiddle().transfer(storage, fileLocation, mkdir);
-                }
-            }).start();
-        } else {
-            for (FhStorage storage : storages) {
-                storage.upload(fileLocation, file, mkdir);
+                storage.upload(uploadMultipartObject);
             }
         }
     }

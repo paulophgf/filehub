@@ -19,6 +19,7 @@ public class Schema {
     private Collection<FhStorage> storages;
     private boolean isTemporaryMiddle;
     private boolean isCacheEnabled;
+    private boolean isParallelUpload;
 
 
     public Schema(String id) {
@@ -26,6 +27,7 @@ public class Schema {
         this.storages = new LinkedList<>();
         this.isTemporaryMiddle = false;
         this.isCacheEnabled = false;
+        this.isParallelUpload = false;
     }
 
     public Schema(String id, FhStorage storage) {
@@ -33,14 +35,17 @@ public class Schema {
         this.storages = Collections.singletonList(storage);
         this.isTemporaryMiddle = false;
         this.isCacheEnabled = false;
+        this.isParallelUpload = false;
     }
 
-    public Schema(String id, Trigger trigger, FhStorage middle, Collection<FhStorage> storages, boolean isCacheEnabled) {
+    public Schema(String id, Trigger trigger, FhStorage middle, Collection<FhStorage> storages,
+                  boolean isCacheEnabled, boolean isParallelUpload) {
         this.id = id;
         this.trigger = trigger;
         this.middle = middle;
         this.storages = storages;
         this.isCacheEnabled = isCacheEnabled;
+        this.isParallelUpload = isParallelUpload;
         this.isTemporaryMiddle = !storages.contains(middle);
         if(isTemporaryMiddle && isCacheEnabled) {
             throw new PropertiesReaderException("The " + id + " schema is using a temporary storage with cache.");

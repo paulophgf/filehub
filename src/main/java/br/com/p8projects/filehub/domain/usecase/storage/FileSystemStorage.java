@@ -1,14 +1,15 @@
 package br.com.p8projects.filehub.domain.usecase.storage;
 
+import br.com.p8projects.filehub.domain.exceptions.NotFoundException;
 import br.com.p8projects.filehub.domain.exceptions.StorageException;
 import br.com.p8projects.filehub.domain.exceptions.UploadException;
-import br.com.p8projects.filehub.domain.model.Base64Upload;
-import br.com.p8projects.filehub.domain.model.FileItem;
-import br.com.p8projects.filehub.domain.model.FileLocation;
-import br.com.p8projects.filehub.domain.model.FileMetadata;
+import br.com.p8projects.filehub.domain.model.*;
 import br.com.p8projects.filehub.domain.model.config.FhStorage;
 import br.com.p8projects.filehub.domain.model.storage.Base64File;
 import br.com.p8projects.filehub.domain.model.storage.filesystem.FileSystemProperties;
+import br.com.p8projects.filehub.domain.model.upload.Base64Upload;
+import br.com.p8projects.filehub.domain.model.upload.UploadBase64Object;
+import br.com.p8projects.filehub.domain.model.upload.UploadMultipartObject;
 import org.apache.commons.io.FileUtils;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,7 +44,7 @@ public class FileSystemStorage extends FhStorage<FileSystemProperties> {
     public boolean createDirectory(String directory) {
         String pathDir = properties.formatDirPath(directory);
         Boolean result = false;
-        String filePath = formatFilePath(pathDir);
+        String filePath = properties.formatFilePath(pathDir);
         File dir = new File(filePath);
         if(!dir.exists() || !dir.isDirectory()) {
             result = dir.mkdirs();
@@ -55,7 +56,7 @@ public class FileSystemStorage extends FhStorage<FileSystemProperties> {
     public boolean renameDirectory(String path, String name) {
         String pathDir = properties.formatDirPath(path);
         Boolean result = false;
-        File file = new File(formatFilePath(pathDir));
+        File file = new File(properties.formatFilePath(pathDir));
         if(file.exists() && file.isDirectory()) {
             Path dirPath = Paths.get(path);
             String newPath = dirPath.getParent() + File.separator + name;
@@ -69,7 +70,7 @@ public class FileSystemStorage extends FhStorage<FileSystemProperties> {
     public boolean deleteDirectory(String path, boolean isRecursive) {
         String pathDir = properties.formatDirPath(path);
         Boolean result = false;
-        File file = new File(formatFilePath(pathDir));
+        File file = new File(properties.formatFilePath(pathDir));
         if(file.exists() && file.isDirectory()) {
             if(isRecursive) {
                 result = FileSystemUtils.deleteRecursively(file);
@@ -87,7 +88,7 @@ public class FileSystemStorage extends FhStorage<FileSystemProperties> {
     @Override
     public List<FileItem> listFiles(String path) {
         String pathDir = properties.formatDirPath(path);
-        String filePath = formatFilePath(pathDir);
+        String filePath = properties.formatFilePath(pathDir);
         File dir = new File(filePath);
         if(!dir.isDirectory()) {
             throw new StorageException(pathDir + " is not a directory");
@@ -104,7 +105,7 @@ public class FileSystemStorage extends FhStorage<FileSystemProperties> {
 
     @Override
     public boolean existsDirectory(String pathDir) {
-        File file = new File(formatFilePath(pathDir));
+        File file = new File(properties.formatFilePath(pathDir));
         return file.exists() && file.isDirectory();
     }
 
@@ -114,18 +115,11 @@ public class FileSystemStorage extends FhStorage<FileSystemProperties> {
     // Files Operations
 
     @Override
-    public void upload(FileLocation fileLocation, MultipartFile file, Boolean mkdir) {
-        String filePath = formatFilePath(fileLocation.getPath());
-        checkIfFolderExists(fileLocation.getPath(), mkdir);
-        executeUpdateMultipart(filePath, file, fileLocation.getFilename());
-    }
-
-    @Override
-    public void upload(String pathDir, MultipartFile[] files, Boolean mkdir) {
-        String filePath = formatFilePath(pathDir);
-        checkIfFolderExists(pathDir, mkdir);
-        for(MultipartFile file : files) {
-            executeUpdateMultipart(filePath, file, file.getOriginalFilename());
+    public void upload(UploadMultipartObject uploadMultipartObject) {
+        String filePath = properties.formatFilePath(uploadMultipartObject.getPath());
+        checkIfFolderExists(uploadMultipartObject.getPath(), uploadMultipartObject.isMkdir());
+        for(UploadMultipartObject.FileUploadObject file : uploadMultipartObject.getFiles()) {
+            executeUpdateMultipart(filePath, file.getFile(), file.getFilename());
         }
     }
 
@@ -147,19 +141,10 @@ public class FileSystemStorage extends FhStorage<FileSystemProperties> {
 
 
     @Override
-    public void uploadBase64(FileLocation fileLocation, Base64Upload file, Boolean mkdir) {
-        String filePath = formatFilePath(fileLocation.getPath());
-        checkIfFolderExists(fileLocation.getPath(), mkdir);
-        Base64File base64File = file.getBase64();
-        fileLocation.setFilename(file.getFilename());
-        executeUpdateBase64(base64File, filePath, fileLocation.getFilename());
-    }
-
-    @Override
-    public void uploadBase64(String pathDir, Base64Upload[] files, Boolean mkdir) {
-        String filePath = formatFilePath(pathDir);
-        checkIfFolderExists(pathDir, mkdir);
-        for(Base64Upload file : files) {
+    public void uploadBase64(UploadBase64Object uploadBase64Object) {
+        String filePath = properties.formatFilePath(uploadBase64Object.getPath());
+        checkIfFolderExists(uploadBase64Object.getPath(), uploadBase64Object.isMkdir());
+        for(Base64Upload file : uploadBase64Object.getFiles()) {
             Base64File base64File = file.getBase64();
             executeUpdateBase64(base64File, filePath, file.getFilename());
         }
@@ -178,25 +163,18 @@ public class FileSystemStorage extends FhStorage<FileSystemProperties> {
 
     @Override
     public OutputStream getOutputStreamFromStorage(String pathDir, String filename, Boolean mkdir) throws IOException {
-        String filePath = formatFilePath(pathDir);
+        String filePath = properties.formatFilePath(pathDir);
         checkIfFolderExists(pathDir, mkdir);
         Path filepath = Paths.get(filePath, filename);
         createFileIfNotExists(filepath);
         return new FileOutputStream(filepath.toFile());
     }
 
-
     @Override
-    public void transfer(FhStorage destination, FileLocation fileLocation, Boolean mkdir) {
-        String filePath = formatFilePath(fileLocation.getPath());
-        executeTransfer(destination, fileLocation.getPath(), filePath, fileLocation.getFilename(), mkdir);
-    }
-
-    @Override
-    public void transfer(FhStorage destination, String pathDir, List<String> filenames, Boolean mkdir) {
-        String filePath = formatFilePath(pathDir);
-        for(String filename : filenames) {
-            executeTransfer(destination, pathDir, filePath, filename, mkdir);
+    public void transfer(FhStorage destination, UploadMultipartObject uploadMultipartObject) {
+        String filePath = properties.formatFilePath(uploadMultipartObject.getPath());
+        for(UploadMultipartObject.FileUploadObject file : uploadMultipartObject.getFiles()) {
+            executeTransfer(destination, uploadMultipartObject.getPath(), filePath, file.getFilename(), uploadMultipartObject.isMkdir());
         }
     }
 
@@ -216,13 +194,13 @@ public class FileSystemStorage extends FhStorage<FileSystemProperties> {
 
     @Override
     public boolean existsFile(String path) {
-        File file = new File(formatFilePath(path));
+        File file = new File(properties.formatFilePath(path));
         return file.exists() && !file.isDirectory();
     }
 
     @Override
     public FileMetadata getFileDetails(String filePath) {
-        File file = new File(formatFilePath(filePath));
+        File file = new File(properties.formatFilePath(filePath));
         String contentType = URLConnection.guessContentTypeFromName(file.getName());
         FileMetadata fileMetadata = new FileMetadata();
         fileMetadata.setContentType(contentType);
@@ -234,11 +212,10 @@ public class FileSystemStorage extends FhStorage<FileSystemProperties> {
     @Override
     public boolean delete(String path) {
         Boolean result = false;
-        File file = new File(formatFilePath(path));
-        if(file.exists()) {
-            if(!file.isDirectory()) {
-                result = file.delete();
-            }
+        File file = new File(properties.formatFilePath(path));
+        checkIfFileExists(path);
+        if(!file.isDirectory()) {
+            result = file.delete();
         }
         return result;
     }
@@ -247,7 +224,7 @@ public class FileSystemStorage extends FhStorage<FileSystemProperties> {
 
     @Override
     public InputStream downloadFile(String filePath) throws IOException {
-        File file = new File(formatFilePath(filePath));
+        File file = new File(properties.formatFilePath(filePath));
         return FileUtils.openInputStream(file);
     }
 
@@ -273,8 +250,10 @@ public class FileSystemStorage extends FhStorage<FileSystemProperties> {
         }
     }
 
-    private String formatFilePath(String path) {
-        return properties.getBaseDir() + path.replace("/", File.separator);
+    private void checkIfFileExists(String path) {
+        if(!existsFile(path)) {
+            throw new NotFoundException("File not found");
+        }
     }
 
 }

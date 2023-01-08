@@ -170,7 +170,6 @@ configuration properties the storage has. The storage types are listed next:
         <td colspan="1">
             <div>It creates a link with a google cloud storage bucket</div>
             <div><b>Type:</b> GOOGLE_CLOUD</div>
-            <div><b>Limitations:</b> Directory size value is always zero</div>
         </td>
       </tr>
       <tr style="background-color: white; color: black">
@@ -195,7 +194,10 @@ configuration properties the storage has. The storage types are listed next:
         <td colspan="1">
             <div>It creates a link with a dropbox account</div>
             <div><b>Type:</b> DROPBOX</div>
-            <div><b>Limitations:</b> The refresh token operation was not implemented.</div>
+            <div><b>Limitations:</b> 
+                The refresh token operation was not implemented. 
+                It is necessary to generate a new token when you use this kind of storage
+            </div>
         </td>
       </tr>
       <tr style="background-color: white; color: black">
@@ -500,12 +502,21 @@ two ways:
 - **Sequential transference:** It is the default transference type. The FileHub will transfer the files to each
   storage in a sequential way, following the storage declaration order from the schema.
 - **Parallel transference:** The FileHub transfers the files to the storages at the same time. In this case,
-  there isn’t a specific transference order.
+  there isn’t a specific transference order. If you want to use the parallel transference you need to 
+  put the **parallel-upload** attribute in the schema tag with **true** value.
+
+````xml
+<schemas>
+    <schema name="test-parallel" parallel-upload="true">
+        <storage-id>example</storage-id>
+    </schema>
+</schemas>
+````
+<p align="center"><sub>Parallel transference configuration example</sub></p> <br>
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Regardless of the transference type, the upload request will only return a response after the file transference 
 from the schema to all storages has ended.
-
 
 ### Middle-Storage
 

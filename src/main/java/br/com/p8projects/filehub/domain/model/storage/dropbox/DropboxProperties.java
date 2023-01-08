@@ -47,6 +47,13 @@ public class DropboxProperties implements StorageProperties, Cloneable {
         return baseDir + path;
     }
 
+    public String formatFilePath(String path) {
+        if(!path.startsWith("/")) {
+            path = "/" + path;
+        }
+        return baseDir + path;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

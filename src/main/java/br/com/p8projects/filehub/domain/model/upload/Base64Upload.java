@@ -1,4 +1,4 @@
-package br.com.p8projects.filehub.domain.model;
+package br.com.p8projects.filehub.domain.model.upload;
 
 import br.com.p8projects.filehub.domain.model.storage.Base64File;
 import com.fasterxml.jackson.annotation.JsonIgnore;
