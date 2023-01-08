@@ -1,10 +1,11 @@
 package br.com.p8projects.filehub.infrastructure.controller;
 
 import br.com.p8projects.filehub.domain.exceptions.NotFoundException;
-import br.com.p8projects.filehub.domain.model.Base64Upload;
-import br.com.p8projects.filehub.domain.model.FileMetadata;
-import br.com.p8projects.filehub.domain.model.FileLocation;
+import br.com.p8projects.filehub.domain.model.*;
 import br.com.p8projects.filehub.domain.model.config.Schema;
+import br.com.p8projects.filehub.domain.model.upload.Base64Upload;
+import br.com.p8projects.filehub.domain.model.upload.UploadBase64Object;
+import br.com.p8projects.filehub.domain.model.upload.UploadMultipartObject;
 import br.com.p8projects.filehub.domain.usecase.FileManager;
 import br.com.p8projects.filehub.domain.usecase.TriggerAuthenticationService;
 import br.com.p8projects.filehub.infrastructure.config.StorageResourceReader;
@@ -33,97 +34,42 @@ public class FileController {
     }
 
 
-    @ApiOperation(value = "Upload single file",
-            notes = "It allows to upload a file to the path informed. The operation " +
-                    "will be executed in each storages of schema informed.")
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Operation executed successfully"),
-            @ApiResponse(code = 404, message = "Directory not found")
-    })
-    @PostMapping(value = "/schema/{schema}/upload")
-    public ResponseEntity<String> uploadMultipartFile(HttpServletRequest request,
-                                                      @ApiParam(value = "Schema name (created at XLM configuration file)", required = true)
-                                                       @PathVariable("schema") String schemaId,
-                                                      @ApiParam(value = "Single multipart file", required = true)
-                                                       @RequestParam("file") MultipartFile file,
-                                                      @ApiParam(value = "Path separated by slash character \" / \" where the file will be saved", required = true)
-                                                       @RequestParam("path") String path,
-                                                      @ApiParam(value = "Name used to save the file. If filename is not informed, the original filename is used.\n" +
-                                                               "Obs.: If TRIGGER function is used, the filename returned from endpoint will be prioritized.")
-                                                       @RequestParam(value = "filename", required = false) String filename,
-                                                      @ApiParam(value = "TRUE: Will create the directory path before upload the file.\n" +
-                                                              "FALSE: Can do an error if the directory path does not exists", defaultValue = "false")
-                                                       @RequestParam(value = "mkdir", required = false, defaultValue = "false") Boolean mkdir) {
-        Schema schema = StorageResourceReader.getSchema(schemaId);
-        FileLocation fileLocation = triggerAuthenticationService.getFileLocation(request, schema, path, false);
-        fileLocation.setFilename(filename).setFilename(file.getOriginalFilename());
-        fileManager.upload(schema, fileLocation, file, mkdir);
-        return ResponseEntity.ok().build();
-    }
-
-
-    @ApiOperation(value = "Upload multiple file",
+    @ApiOperation(value = "Upload files",
             notes = "It allows to upload files to the path informed. The operation " +
                     "will be executed in each storages of schema informed.")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Operation executed successfully"),
             @ApiResponse(code = 404, message = "Directory not found")
     })
-    @PostMapping(value = "/schema/{schema}/upload/multi")
+    @PostMapping(value = "/schema/{schema}/upload")
     public ResponseEntity<String> uploadMultipartFiles(HttpServletRequest request,
                                         @ApiParam(value = "Schema name (created at XLM configuration file)", required = true)
                                         @PathVariable("schema") String schemaId,
                                         @ApiParam(value = "Multiple multipart files", required = true)
                                         @RequestParam("files") MultipartFile[] files,
+                                        @ApiParam(value = "Array of filenames")
+                                        @RequestParam(value = "filenames", required = false) String[] filenames,
                                         @ApiParam(value = "Path separated by slash character \" / \" where the file will be saved", required = true)
                                         @RequestParam("path") String path,
                                         @ApiParam(value = "TRUE: Will create the directory path before upload the file.\n" +
                                                "FALSE: Can do an error if the directory path does not exists", defaultValue = "false")
-                                        @RequestParam(value = "mkdir", required = false, defaultValue = "false") Boolean mkdir,
-                                        @ApiParam(value = "TRUE: Will do the upload at the same time to all schema storages.\n" +
-                                               "FALSE: Will do the upload storage by storage once per time", defaultValue = "false")
-                                        @RequestParam(value = "parallel", required = false, defaultValue = "false") Boolean parallel) {
+                                        @RequestParam(value = "mkdir", required = false, defaultValue = "false") Boolean mkdir) {
         Schema schema = StorageResourceReader.getSchema(schemaId);
-        FileLocation fileLocation = triggerAuthenticationService.getFileLocation(request, schema, path, false);
-        fileManager.upload(schema, fileLocation.getPath(), files, mkdir, parallel);
+        UploadMultipartObject uploadMultipartObject = new UploadMultipartObject(schema, path, files, filenames, mkdir);
+        triggerAuthenticationService.checkUploadOperation(request, uploadMultipartObject);
+        fileManager.upload(uploadMultipartObject);
         return ResponseEntity.ok().build();
     }
 
 
-    @ApiOperation(value = "Upload single base64 file",
-            notes = "It allows to upload a base64 file to the path informed. The operation " +
-                    "will be executed in each storages of schema informed.")
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Operation executed successfully"),
-            @ApiResponse(code = 404, message = "Directory not found")
-    })
-    @PostMapping(value = "/schema/{schema}/upload64")
-    public ResponseEntity<String> uploadBase64File(HttpServletRequest request,
-                                                    @ApiParam(value = "Base64 object", required = true)
-                                                    @RequestBody Base64Upload file,
-                                                    @ApiParam(value = "Schema name (created at XLM configuration file)", required = true)
-                                                    @PathVariable("schema") String schemaId,
-                                                    @ApiParam(value = "Path separated by slash character \" / \" where the file will be saved", required = true)
-                                                    @RequestParam("path") String path,
-                                                    @ApiParam(value = "TRUE: Will create the directory path before upload the file.\n" +
-                                                           "FALSE: Can do an error if the directory path does not exists", defaultValue = "false")
-                                                    @RequestParam(value = "mkdir", required = false, defaultValue = "false") Boolean mkdir) {
-        Schema schema = StorageResourceReader.getSchema(schemaId);
-        FileLocation fileLocation = triggerAuthenticationService.getFileLocation(request, schema, path, false);
-        fileManager.uploadBase64(schema, fileLocation, file, mkdir);
-        fileLocation.setFilename(file.getFilename());
-        return ResponseEntity.ok().build();
-    }
-
-
-    @ApiOperation(value = "Upload multiple base64 files",
+    @ApiOperation(value = "Upload base64 files",
             notes = "It allows to upload base64 files to the path informed. The operation " +
                     "will be executed in each storages of schema informed.")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Operation executed successfully"),
             @ApiResponse(code = 404, message = "Directory not found")
     })
-    @PostMapping(value = "/schema/{schema}/upload64/multi")
+    @PostMapping(value = "/schema/{schema}/upload64")
     public ResponseEntity<String> uploadBase64Files(HttpServletRequest request,
                                 @ApiParam(value = "Base64 object array", required = true)
                                 @RequestBody Base64Upload[] files,
@@ -135,8 +81,9 @@ public class FileController {
                                         "FALSE: Can do an error if the directory path does not exists", defaultValue = "false")
                                 @RequestParam(value = "mkdir", required = false, defaultValue = "false") Boolean mkdir) {
         Schema schema = StorageResourceReader.getSchema(schemaId);
-        FileLocation fileLocation = triggerAuthenticationService.getFileLocation(request, schema, path, false);
-        fileManager.uploadBase64(schema, fileLocation.getPath(), files, mkdir);
+        UploadBase64Object uploadBase64Object = new UploadBase64Object(schema, path, files, mkdir);
+        triggerAuthenticationService.checkUploadOperation(request, uploadBase64Object);
+        fileManager.uploadBase64(uploadBase64Object);
         return ResponseEntity.ok().build();
     }
 

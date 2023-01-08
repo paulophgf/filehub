@@ -5,6 +5,7 @@ import br.com.p8projects.filehub.domain.model.storage.StorageProperties;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.File;
 import java.util.Objects;
 
 @Getter
@@ -20,7 +21,13 @@ public class FileSystemProperties implements StorageProperties, Cloneable {
 
     @Override
     public void afterReadProperties(String storageName) {
-        // No implementation is necessary
+        checkBaseDir();
+    }
+
+    private void checkBaseDir() {
+        if(!baseDir.endsWith(File.separator)) {
+            baseDir += File.separator;
+        }
     }
 
     public static String formatDirPath(String path) {
@@ -31,6 +38,10 @@ public class FileSystemProperties implements StorageProperties, Cloneable {
             path = path.substring(0, path.length()-1);
         }
         return path;
+    }
+
+    public String formatFilePath(String path) {
+        return baseDir + path.replace("/", File.separator);
     }
 
     @Override

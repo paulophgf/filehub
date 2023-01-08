@@ -26,10 +26,10 @@ public class S3Properties implements StorageProperties {
 
     @Override
     public void afterReadProperties(String storageName) {
-        setBaseDir();
+        checkBaseDir();
     }
 
-    private void setBaseDir() {
+    private void checkBaseDir() {
         if(baseDir == null) {
             baseDir = "";
         }
@@ -52,6 +52,16 @@ public class S3Properties implements StorageProperties {
         }
         if("/".equals(path) && !"".equals(baseDir)) {
             path = "";
+        }
+        return baseDir + path;
+    }
+
+    public String formatUploadFilePath(String path) {
+        if(path.startsWith("/")) {
+            path = path.substring(1);
+        }
+        if(!"".equals(path) && !path.endsWith("/")) {
+            path += "/";
         }
         return baseDir + path;
     }

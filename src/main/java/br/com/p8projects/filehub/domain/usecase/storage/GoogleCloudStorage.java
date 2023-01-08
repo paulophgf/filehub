@@ -3,13 +3,13 @@ package br.com.p8projects.filehub.domain.usecase.storage;
 import br.com.p8projects.filehub.domain.exceptions.NotFoundException;
 import br.com.p8projects.filehub.domain.exceptions.StorageException;
 import br.com.p8projects.filehub.domain.exceptions.UploadException;
-import br.com.p8projects.filehub.domain.model.Base64Upload;
-import br.com.p8projects.filehub.domain.model.FileItem;
-import br.com.p8projects.filehub.domain.model.FileLocation;
-import br.com.p8projects.filehub.domain.model.FileMetadata;
+import br.com.p8projects.filehub.domain.model.*;
 import br.com.p8projects.filehub.domain.model.config.FhStorage;
 import br.com.p8projects.filehub.domain.model.storage.Base64File;
 import br.com.p8projects.filehub.domain.model.storage.google.GoogleCloudProperties;
+import br.com.p8projects.filehub.domain.model.upload.Base64Upload;
+import br.com.p8projects.filehub.domain.model.upload.UploadBase64Object;
+import br.com.p8projects.filehub.domain.model.upload.UploadMultipartObject;
 import br.com.p8projects.filehub.system.FilePathUtils;
 import com.google.api.gax.paging.Page;
 import com.google.auth.Credentials;
@@ -132,21 +132,14 @@ public class GoogleCloudStorage extends FhStorage<GoogleCloudProperties> {
 
     // Files Operations
 
-    @Override
-    public void upload(FileLocation fileLocation, MultipartFile file, Boolean mkdir) {
-        Storage googleStorage = getStorage();
-        String pathDir = properties.formatDirPath(fileLocation.getPath());
-        checkIfFolderExists(googleStorage, pathDir, mkdir);
-        executeUploadMultipart(googleStorage, file, pathDir, fileLocation.getFilename());
-    }
 
     @Override
-    public void upload(String path, MultipartFile[] files, Boolean mkdir) {
+    public void upload(UploadMultipartObject uploadMultipartObject) {
         Storage googleStorage = getStorage();
-        String pathDir = properties.formatDirPath(path);
-        checkIfFolderExists(googleStorage, pathDir, mkdir);
-        for(MultipartFile file : files) {
-            executeUploadMultipart(googleStorage, file, pathDir, file.getOriginalFilename());
+        String pathDir = properties.formatDirPath(uploadMultipartObject.getPath());
+        checkIfFolderExists(googleStorage, pathDir, uploadMultipartObject.isMkdir());
+        for(UploadMultipartObject.FileUploadObject file : uploadMultipartObject.getFiles()) {
+            executeUploadMultipart(googleStorage, file.getFile(), pathDir, file.getFilename());
         }
     }
 
@@ -154,7 +147,7 @@ public class GoogleCloudStorage extends FhStorage<GoogleCloudProperties> {
         try(InputStream in = file.getInputStream()) {
             Storage.BlobTargetOption precondition = Storage.BlobTargetOption.doesNotExist();
             BlobId blobId = BlobId.of(properties.getBucket(), pathDir + filename);
-            BlobInfo blobInfo = BlobInfo.newBuilder(blobId).build();
+            BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType(file.getContentType()).build();
             googleStorage.create(blobInfo, in.readAllBytes(), precondition);
         } catch (IOException e) {
             throw new UploadException("Error to upload the file " + file.getName(), e);
@@ -163,19 +156,11 @@ public class GoogleCloudStorage extends FhStorage<GoogleCloudProperties> {
 
 
     @Override
-    public void uploadBase64(FileLocation fileLocation, Base64Upload file, Boolean mkdir) {
+    public void uploadBase64(UploadBase64Object uploadBase64Object) {
         Storage googleStorage = getStorage();
-        String pathDir = properties.formatDirPath(fileLocation.getPath());
-        checkIfFolderExists(googleStorage, pathDir, mkdir);
-        executeUploadBase64(googleStorage, pathDir, file);
-    }
-
-    @Override
-    public void uploadBase64(String path, Base64Upload[] files, Boolean mkdir) {
-        Storage googleStorage = getStorage();
-        String pathDir = properties.formatDirPath(path);
-        checkIfFolderExists(googleStorage, pathDir, mkdir);
-        for(Base64Upload file : files) {
+        String pathDir = properties.formatDirPath(uploadBase64Object.getPath());
+        checkIfFolderExists(googleStorage, pathDir, uploadBase64Object.isMkdir());
+        for(Base64Upload file : uploadBase64Object.getFiles()) {
             executeUploadBase64(googleStorage, pathDir, file);
         }
     }
@@ -209,18 +194,11 @@ public class GoogleCloudStorage extends FhStorage<GoogleCloudProperties> {
     }
 
     @Override
-    public void transfer(FhStorage destination, FileLocation fileLocation, Boolean mkdir) {
+    public void transfer(FhStorage destination, UploadMultipartObject uploadMultipartObject) {
         Storage googleStorage = getStorage();
-        String filePath = properties.formatDirPath(fileLocation.getPath());
-        executeTransfer(googleStorage, destination, fileLocation.getPath(), filePath, fileLocation.getFilename(), mkdir);
-    }
-
-    @Override
-    public void transfer(FhStorage destination, String pathDir, List<String> filenames, Boolean mkdir) {
-        Storage googleStorage = getStorage();
-        String filePath = properties.formatDirPath(pathDir);
-        for(String filename : filenames) {
-            executeTransfer(googleStorage, destination, pathDir, filePath, filename, mkdir);
+        String filePath = properties.formatDirPath(uploadMultipartObject.getPath());
+        for(UploadMultipartObject.FileUploadObject file : uploadMultipartObject.getFiles()) {
+            executeTransfer(googleStorage, destination, uploadMultipartObject.getPath(), filePath, file.getFilename(), uploadMultipartObject.isMkdir());
         }
     }
 
@@ -245,21 +223,25 @@ public class GoogleCloudStorage extends FhStorage<GoogleCloudProperties> {
     @Override
     public boolean delete(String path) {
         Storage googleStorage = getStorage();
-        BlobId blobId = BlobId.of(properties.getBucket(), path);
+        String filepath = properties.formatFilePath(path);
+        checkIfFileExists(googleStorage, filepath);
+        BlobId blobId = BlobId.of(properties.getBucket(), filepath);
         return googleStorage.delete(blobId);
     }
 
     @Override
     public boolean existsFile(String path) {
         Storage googleStorage = getStorage();
-        BlobId blobId = BlobId.of(properties.getBucket(), path);
+        String filepath = properties.formatFilePath(path);
+        BlobId blobId = BlobId.of(properties.getBucket(), filepath);
         return googleStorage.get(blobId) != null;
     }
 
     @Override
     public FileMetadata getFileDetails(String path) {
         Storage googleStorage = getStorage();
-        BlobId blobId = BlobId.of(properties.getBucket(), path);
+        String filepath = properties.formatFilePath(path);
+        BlobId blobId = BlobId.of(properties.getBucket(), filepath);
         Blob blob = googleStorage.get(blobId);
         FileMetadata fileMetadata = new FileMetadata();
         fileMetadata.setContentType(blob.getContentType());
@@ -271,8 +253,8 @@ public class GoogleCloudStorage extends FhStorage<GoogleCloudProperties> {
     @Override
     public InputStream downloadFile(String path) {
         Storage googleStorage = getStorage();
-        String pathDir = properties.formatDirPath(path);
-        BlobId blobId = BlobId.of(properties.getBucket(), pathDir);
+        String filepath = properties.formatFilePath(path);
+        BlobId blobId = BlobId.of(properties.getBucket(), filepath);
         return Channels.newInputStream(googleStorage.get(blobId).reader());
     }
 
@@ -293,13 +275,22 @@ public class GoogleCloudStorage extends FhStorage<GoogleCloudProperties> {
     }
 
     private void checkIfFolderExists(Storage storage, String path, Boolean mkdir) {
-        Page<Blob> blobs = storage.list(properties.getBucket(), Storage.BlobListOption.prefix(path), Storage.BlobListOption.currentDirectory());
-        if(!blobs.getValues().iterator().hasNext()) {
-            if(!mkdir) {
-                throw new StorageException("Directory not found: " + path);
+        if(!"".equals(path)) {
+            Page<Blob> blobs = storage.list(properties.getBucket(), Storage.BlobListOption.prefix(path), Storage.BlobListOption.currentDirectory());
+            if (!blobs.getValues().iterator().hasNext()) {
+                if (!mkdir) {
+                    throw new StorageException("Directory not found: " + path);
+                }
+                BlobInfo newDirectory = BlobInfo.newBuilder(properties.getBucket(), path).build();
+                storage.create(newDirectory);
             }
-            BlobInfo newDirectory = BlobInfo.newBuilder(properties.getBucket(), path).build();
-            storage.create(newDirectory);
+        }
+    }
+
+    private void checkIfFileExists(Storage googleStorage, String filepath) {
+        BlobId blobId = BlobId.of(properties.getBucket(), filepath);
+        if(googleStorage.get(blobId) == null) {
+            throw new NotFoundException("File not found");
         }
     }
 

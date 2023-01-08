@@ -4,13 +4,14 @@ import br.com.p8projects.filehub.domain.exceptions.DownloadException;
 import br.com.p8projects.filehub.domain.exceptions.NotFoundException;
 import br.com.p8projects.filehub.domain.exceptions.StorageException;
 import br.com.p8projects.filehub.domain.exceptions.UploadException;
-import br.com.p8projects.filehub.domain.model.Base64Upload;
-import br.com.p8projects.filehub.domain.model.FileItem;
-import br.com.p8projects.filehub.domain.model.FileLocation;
+import br.com.p8projects.filehub.domain.model.*;
 import br.com.p8projects.filehub.domain.model.FileMetadata;
 import br.com.p8projects.filehub.domain.model.config.FhStorage;
 import br.com.p8projects.filehub.domain.model.storage.Base64File;
 import br.com.p8projects.filehub.domain.model.storage.dropbox.DropboxProperties;
+import br.com.p8projects.filehub.domain.model.upload.Base64Upload;
+import br.com.p8projects.filehub.domain.model.upload.UploadBase64Object;
+import br.com.p8projects.filehub.domain.model.upload.UploadMultipartObject;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.dropbox.core.DbxException;
 import com.dropbox.core.DbxRequestConfig;
@@ -153,21 +154,14 @@ public class DropboxStorage extends FhStorage<DropboxProperties> {
 
     // Files Operations
 
-    @Override
-    public void upload(FileLocation fileLocation, MultipartFile file, Boolean mkdir) {
-        DbxClientV2 client = getClient();
-        String pathDir = properties.formatDirPath(fileLocation.getPath());
-        checkIfFolderExists(client, pathDir, mkdir);
-        executeUploadMultipart(client, file, pathDir, fileLocation.getFilename());
-    }
 
     @Override
-    public void upload(String pathDir, MultipartFile[] files, Boolean mkdir) {
+    public void upload(UploadMultipartObject uploadMultipartObject) {
         DbxClientV2 client = getClient();
-        String path = properties.formatDirPath(pathDir);
-        checkIfFolderExists(client, path, mkdir);
-        for(MultipartFile file : files) {
-            executeUploadMultipart(client, file, path, file.getOriginalFilename());
+        String path = properties.formatDirPath(uploadMultipartObject.getPath());
+        checkIfFolderExists(client, path, uploadMultipartObject.isMkdir());
+        for(UploadMultipartObject.FileUploadObject file : uploadMultipartObject.getFiles()) {
+            executeUploadMultipart(client, file.getFile(), path, file.getFilename());
         }
     }
 
@@ -185,20 +179,13 @@ public class DropboxStorage extends FhStorage<DropboxProperties> {
         }
     }
 
-    @Override
-    public void uploadBase64(FileLocation fileLocation, Base64Upload file, Boolean mkdir) {
-        DbxClientV2 client = getClient();
-        String path = properties.formatDirPath(fileLocation.getPath());
-        checkIfFolderExists(client, path, mkdir);
-        executeUploadBase64(client, file, path, fileLocation.getFilename());
-    }
 
     @Override
-    public void uploadBase64(String pathDir, Base64Upload[] files, Boolean mkdir) {
+    public void uploadBase64(UploadBase64Object uploadBase64Object) {
         DbxClientV2 client = getClient();
-        String path = properties.formatDirPath(pathDir);
-        checkIfFolderExists(client, path, mkdir);
-        for(Base64Upload file : files) {
+        String path = properties.formatDirPath(uploadBase64Object.getPath());
+        checkIfFolderExists(client, path, uploadBase64Object.isMkdir());
+        for(Base64Upload file : uploadBase64Object.getFiles()) {
             executeUploadBase64(client, file, path, file.getFilename());
         }
     }
@@ -235,18 +222,11 @@ public class DropboxStorage extends FhStorage<DropboxProperties> {
     }
 
     @Override
-    public void transfer(FhStorage destination, FileLocation fileLocation, Boolean mkdir) {
+    public void transfer(FhStorage destination, UploadMultipartObject uploadMultipartObject) {
         DbxClientV2 client = getClient();
-        String filePath = properties.formatDirPath(fileLocation.getPath());
-        executeTransfer(client, destination, fileLocation.getPath(), filePath, fileLocation.getFilename(), mkdir);
-    }
-
-    @Override
-    public void transfer(FhStorage destination, String pathDir, List<String> filenames, Boolean mkdir) {
-        DbxClientV2 client = getClient();
-        String filePath = properties.formatDirPath(pathDir);
-        for(String filename : filenames) {
-            executeTransfer(client, destination, pathDir, filePath, filename, mkdir);
+        String filePath = properties.formatDirPath(uploadMultipartObject.getPath());
+        for(UploadMultipartObject.FileUploadObject file : uploadMultipartObject.getFiles()) {
+            executeTransfer(client, destination, uploadMultipartObject.getPath(), filePath, file.getFilename(), uploadMultipartObject.isMkdir());
         }
     }
 
@@ -270,14 +250,13 @@ public class DropboxStorage extends FhStorage<DropboxProperties> {
     public boolean delete(String path) {
         DbxClientV2 client = getClient();
         String filePath = properties.formatDirPath(path);
-        if (existsFile(client, filePath)) {
-            try {
-                client.files().deleteV2(filePath);
-            } catch (InvalidAccessTokenException e) {
-                throw new StorageException("Invalid or expired token (Dropbox storage)");
-            } catch (DbxException e) {
-                throw new RuntimeException("Error to delete the file " + path, e);
-            }
+        checkIfFileExists(client, filePath);
+        try {
+            client.files().deleteV2(filePath);
+        } catch (InvalidAccessTokenException e) {
+            throw new StorageException("Invalid or expired token (Dropbox storage)");
+        } catch (DbxException e) {
+            throw new RuntimeException("Error to delete the file " + path, e);
         }
         return true;
     }
@@ -285,14 +264,14 @@ public class DropboxStorage extends FhStorage<DropboxProperties> {
     @Override
     public boolean existsFile(String path) {
         DbxClientV2 client = getClient();
-        String filePath = properties.formatDirPath(path);
+        String filePath = properties.formatFilePath(path);
         return existsFile(client, filePath);
     }
 
     @Override
     public FileMetadata getFileDetails(String path) {
         DbxClientV2 client = getClient();
-        String filePath = properties.formatDirPath(path);
+        String filePath = properties.formatFilePath(path);
         FileMetadata fileMetadata = new FileMetadata();
         try {
             com.dropbox.core.v2.files.FileMetadata metadata = (com.dropbox.core.v2.files.FileMetadata) client.files().getMetadata(filePath);
@@ -359,7 +338,7 @@ public class DropboxStorage extends FhStorage<DropboxProperties> {
         } catch (GetMetadataErrorException e) {
             if (e.errorValue.isPath()) {
                 LookupError le = e.errorValue.getPathValue();
-                exists = le.isNotFound();
+                exists = !le.isNotFound();
             }
         } catch (InvalidAccessTokenException e) {
             throw new StorageException("Invalid or expired token (Dropbox storage)");
@@ -370,11 +349,19 @@ public class DropboxStorage extends FhStorage<DropboxProperties> {
     }
 
     private void checkIfFolderExists(DbxClientV2 client, String path, Boolean mkdir) {
-        if(existsDirectory(client, path)) {
-            if(!mkdir) {
-                throw new StorageException("Directory not found: " + path);
+        if(!"".equals(path)) {
+            if (existsDirectory(client, path)) {
+                if (!mkdir) {
+                    throw new StorageException("Directory not found: " + path);
+                }
+                createDirectory(path);
             }
-            createDirectory(path);
+        }
+    }
+
+    private void checkIfFileExists(DbxClientV2 client, String filepath) {
+        if(!existsFile(client, filepath)) {
+            throw new NotFoundException("File not found");
         }
     }
 

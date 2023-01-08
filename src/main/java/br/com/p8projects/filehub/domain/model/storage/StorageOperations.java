@@ -1,11 +1,9 @@
 package br.com.p8projects.filehub.domain.model.storage;
 
-import br.com.p8projects.filehub.domain.model.Base64Upload;
-import br.com.p8projects.filehub.domain.model.FileItem;
-import br.com.p8projects.filehub.domain.model.FileLocation;
-import br.com.p8projects.filehub.domain.model.FileMetadata;
+import br.com.p8projects.filehub.domain.model.*;
 import br.com.p8projects.filehub.domain.model.config.FhStorage;
-import org.springframework.web.multipart.MultipartFile;
+import br.com.p8projects.filehub.domain.model.upload.UploadBase64Object;
+import br.com.p8projects.filehub.domain.model.upload.UploadMultipartObject;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,20 +25,14 @@ public interface StorageOperations {
     boolean existsDirectory(String pathDir);
 
 
-    void upload(FileLocation fileLocation, MultipartFile file, Boolean mkdir);
+    void upload(UploadMultipartObject uploadMultipartObject);
 
-    void uploadBase64(FileLocation fileLocation, Base64Upload file, Boolean mkdir);
-
-    void upload(String pathDir, MultipartFile[] files, Boolean mkdir);
-
-    void uploadBase64(String pathDir, Base64Upload[] files, Boolean mkdir);
+    void uploadBase64(UploadBase64Object uploadBase64Object);
 
 
     OutputStream getOutputStreamFromStorage(String path, String filename, Boolean mkdir) throws IOException;
 
-    void transfer(FhStorage destination, FileLocation fileLocation, Boolean mkdir);
-
-    void transfer(FhStorage destination, String pathDir, List<String> filenames, Boolean mkdir);
+    void transfer(FhStorage destination, UploadMultipartObject uploadMultipartObject);
 
 
     boolean delete(String path);

@@ -51,6 +51,13 @@ public class GoogleCloudProperties implements StorageProperties {
         return baseDir + path;
     }
 
+    public String formatFilePath(String path) {
+        if(path.startsWith("/")) {
+            path = path.substring(1);
+        }
+        return baseDir + path;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -174,7 +174,6 @@ as propriedades de configuração o storage possui. Os tipos de storages são li
         <td colspan="1">
             <div>Cria um link com um bucket do google cloud storage</div>
             <div><b>Type:</b> GOOGLE_CLOUD</div>
-            <div><b>Limitations:</b> A informação referente ao tamanho dos diretórios está sendo retornando o valor zero</div>
         </td>
       </tr>
       <tr style="background-color: white; color: black">
@@ -199,7 +198,10 @@ as propriedades de configuração o storage possui. Os tipos de storages são li
         <td colspan="1">
             <div>Cria um link com uma conta do dropbox</div>
             <div><b>Type:</b> DROPBOX</div>
-            <div><b>Limitação da Integração:</b> A operação de atualização do token não foi implementada.</div>
+            <div><b>Limitação da Integração: </b>
+               A operação de atualização do token não foi implementada.
+               É necessário gerar um token toda vez que for utilizar esse tipo de storage.
+            </div>
         </td>
       </tr>
       <tr style="background-color: white; color: black">
@@ -512,9 +514,19 @@ determinado schema. Quando o FileHub recebe a requisição de upload e a transfe
 FileHub pode enviar o arquivo para os storages de duas maneiras:
 
 - **Transferência sequencial:** É o tipo de transferência padrão. O FileHub irá transferir os arquivos para cada 
-- um dos storages de forma sequencial, obedecendo a ordem de declaração dos storages no schema.
+  um dos storages de forma sequencial, obedecendo a ordem de declaração dos storages no schema.
 - **Transferência paralela:** O FileHub transfere os arquivos para os storages ao mesmo tempo. Nesse caso não 
-- existe uma ordem de transferência.
+  existe uma ordem de transferência. Para utilizar essa configuração é necessário colocar o atributo
+  **parallel-upload** na tag schema com o valor **true**.
+
+````xml
+<schemas>
+    <schema name="test-parallel" parallel-upload="true">
+        <storage-id>example</storage-id>
+    </schema>
+</schemas>
+````
+<p align="center"><sub>Exemplo de configuração de tranferência paralela</sub></p> <br>
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Independente do tipo de transferência realizada, a requisição de upload só irá retornar uma resposta após o 

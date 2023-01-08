@@ -3,14 +3,14 @@ package br.com.p8projects.filehub.domain.usecase.storage;
 import br.com.p8projects.filehub.domain.exceptions.NotFoundException;
 import br.com.p8projects.filehub.domain.exceptions.StorageException;
 import br.com.p8projects.filehub.domain.exceptions.UploadException;
-import br.com.p8projects.filehub.domain.model.Base64Upload;
-import br.com.p8projects.filehub.domain.model.FileItem;
-import br.com.p8projects.filehub.domain.model.FileLocation;
-import br.com.p8projects.filehub.domain.model.FileMetadata;
+import br.com.p8projects.filehub.domain.model.*;
 import br.com.p8projects.filehub.domain.model.config.FhStorage;
 import br.com.p8projects.filehub.domain.model.storage.Base64File;
 import br.com.p8projects.filehub.domain.model.storage.s3.S3OutputStream;
 import br.com.p8projects.filehub.domain.model.storage.s3.S3Properties;
+import br.com.p8projects.filehub.domain.model.upload.Base64Upload;
+import br.com.p8projects.filehub.domain.model.upload.UploadBase64Object;
+import br.com.p8projects.filehub.domain.model.upload.UploadMultipartObject;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
@@ -129,21 +129,14 @@ public class S3Storage extends FhStorage<S3Properties> {
 
     // Files Operations
 
-    @Override
-    public void upload(FileLocation fileLocation, MultipartFile file, Boolean mkdir) {
-        AmazonS3 s3Client = authorizeOnS3();
-        String pathDir = properties.formatDirPath(fileLocation.getPath());
-        checkIfFolderExists(s3Client, pathDir, mkdir);
-        executeUploadMultipart(s3Client, file, pathDir, fileLocation.getFilename());
-    }
 
     @Override
-    public void upload(String path, MultipartFile[] files, Boolean mkdir) {
+    public void upload(UploadMultipartObject uploadMultipartObject) {
         AmazonS3 s3Client = authorizeOnS3();
-        String pathDir = properties.formatDirPath(path);
-        checkIfFolderExists(s3Client, pathDir, mkdir);
-        for(MultipartFile file : files) {
-            executeUploadMultipart(s3Client, file, pathDir, file.getOriginalFilename());
+        String pathDir = properties.formatUploadFilePath(uploadMultipartObject.getPath());
+        checkIfFolderExists(s3Client, pathDir, uploadMultipartObject.isMkdir());
+        for(UploadMultipartObject.FileUploadObject file : uploadMultipartObject.getFiles()) {
+            executeUploadMultipart(s3Client, file.getFile(), pathDir, file.getFilename());
         }
     }
 
@@ -160,33 +153,24 @@ public class S3Storage extends FhStorage<S3Properties> {
         }
     }
 
-
     @Override
-    public void uploadBase64(FileLocation fileLocation, Base64Upload file, Boolean mkdir) {
+    public void uploadBase64(UploadBase64Object uploadBase64Object) {
         AmazonS3 s3Client = authorizeOnS3();
-        String pathDir = properties.formatDirPath(fileLocation.getPath());
-        checkIfFolderExists(s3Client, pathDir, mkdir);
-        executeUploadBase64(s3Client, file, fileLocation.getFilename());
-    }
-
-    @Override
-    public void uploadBase64(String path, Base64Upload[] files, Boolean mkdir) {
-        AmazonS3 s3Client = authorizeOnS3();
-        String pathDir = properties.formatDirPath(path);
-        checkIfFolderExists(s3Client, pathDir, mkdir);
-        for(Base64Upload file : files) {
-            executeUploadBase64(s3Client, file, file.getFilename());
+        String pathDir = properties.formatUploadFilePath(uploadBase64Object.getPath());
+        checkIfFolderExists(s3Client, pathDir, uploadBase64Object.isMkdir());
+        for(Base64Upload file : uploadBase64Object.getFiles()) {
+            executeUploadBase64(s3Client, pathDir, file, file.getFilename());
         }
     }
 
-    private void executeUploadBase64(AmazonS3 s3Client, Base64Upload file, String filename) {
+    private void executeUploadBase64(AmazonS3 s3Client, String pathDir, Base64Upload file, String filename) {
         Base64File base64File = file.getBase64();
         byte[] bI = Base64.getDecoder().decode(base64File.getFile().getBytes(StandardCharsets.UTF_8));
         InputStream fis = new ByteArrayInputStream(bI);
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentType(base64File.getMimeType());
         metadata.setContentLength(bI.length);
-        s3Client.putObject(properties.getBucket(), filename, fis, metadata);
+        s3Client.putObject(properties.getBucket(), pathDir + filename, fis, metadata);
     }
 
 
@@ -201,19 +185,12 @@ public class S3Storage extends FhStorage<S3Properties> {
 
 
     @Override
-    public void transfer(FhStorage destination, String pathDir, List<String> filenames, Boolean mkdir) {
+    public void transfer(FhStorage destination, UploadMultipartObject uploadMultipartObject) {
         AmazonS3 s3Client = authorizeOnS3();
-        String filePath = properties.formatDirPath(pathDir);
-        for(String filename : filenames) {
-            executeTransfer(s3Client, destination, pathDir, filePath, filename, mkdir);
+        String filePath = properties.formatDirPath(uploadMultipartObject.getPath());
+        for(UploadMultipartObject.FileUploadObject file : uploadMultipartObject.getFiles()) {
+            executeTransfer(s3Client, destination, uploadMultipartObject.getPath(), filePath, file.getFilename(), uploadMultipartObject.isMkdir());
         }
-    }
-
-    @Override
-    public void transfer(FhStorage destination, FileLocation fileLocation, Boolean mkdir) {
-        AmazonS3 s3Client = authorizeOnS3();
-        String filePath = properties.formatDirPath(fileLocation.getPath());
-        executeTransfer(s3Client, destination, fileLocation.getPath(), filePath, fileLocation.getFilename(), mkdir);
     }
 
     private void executeTransfer(AmazonS3 s3Client, FhStorage destination, String pathDir, String filePath, String filename, boolean mkdir) {
@@ -253,8 +230,9 @@ public class S3Storage extends FhStorage<S3Properties> {
 
     @Override
     public boolean delete(String path) {
-        String filePath = properties.formatFilePath(path);
         AmazonS3 s3Client = authorizeOnS3();
+        String filePath = properties.formatFilePath(path);
+        checkIfFileExists(s3Client, filePath);
         ObjectListing listing = s3Client.listObjects(properties.getBucket(), filePath);
         if (listing.getCommonPrefixes().isEmpty()) {
             s3Client.deleteObject(new DeleteObjectRequest(properties.getBucket(), filePath));
@@ -306,6 +284,12 @@ public class S3Storage extends FhStorage<S3Properties> {
         return exists;
     }
 
+    private void checkIfFileExists(AmazonS3 s3Client, String filePath) {
+        if(!s3Client.doesObjectExist(properties.getBucket(), filePath)) {
+            throw new NotFoundException("File not found");
+        }
+    }
+
     private void copy(AmazonS3 s3Client, String pathDir, String newPath) {
         ListObjectsV2Result listing = s3Client.listObjectsV2(properties.getBucket(), pathDir);
         for (S3ObjectSummary filePath : listing.getObjectSummaries()) {
@@ -317,12 +301,14 @@ public class S3Storage extends FhStorage<S3Properties> {
 
     // Remember that in S3 no have folders, just keys in the bucket
     private void checkIfFolderExists(AmazonS3 s3Client, String filepath, Boolean mkdir) {
-        ObjectListing listing = s3Client.listObjects(properties.getBucket(), filepath);
-        if(listing.getObjectSummaries().isEmpty()) {
-            if(!mkdir) {
-                throw new StorageException("Directory not found: " + filepath);
+        if(!"".equals(filepath)) {
+            ObjectListing listing = s3Client.listObjects(properties.getBucket(), filepath);
+            if (listing.getObjectSummaries().isEmpty()) {
+                if (!mkdir) {
+                    throw new StorageException("Directory not found: " + filepath);
+                }
+                createDirectory(filepath);
             }
-            createDirectory(filepath);
         }
     }
 

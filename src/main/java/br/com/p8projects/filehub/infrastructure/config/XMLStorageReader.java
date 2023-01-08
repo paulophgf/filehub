@@ -251,9 +251,10 @@ public class XMLStorageReader {
             }
             Trigger schemaTrigger = getTriggerFromSchema(schemaElement, triggers);
             boolean isEnabledCache = checkBooleanElement(schemaName, schemaElement, "schema", "cache");
+            boolean isParallelUpload = checkBooleanElement(schemaName, schemaElement, "schema", "parallel-upload");
             LinkedList<FhStorage> storageList = getStoragesFromSchema(schemaElement, storages);
             FhStorage middleStorage = getMiddleStorage(schemaElement, storages);
-            schemas.put(schemaName, new Schema(schemaName, schemaTrigger, middleStorage, storageList, isEnabledCache));
+            schemas.put(schemaName, new Schema(schemaName, schemaTrigger, middleStorage, storageList, isEnabledCache, isParallelUpload));
         }
         return schemas;
     }
