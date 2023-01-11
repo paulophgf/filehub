@@ -61,15 +61,15 @@ public class XLMPropertiesReaderData {
         FhStorage<FileSystemProperties> fsStorage = EnumStorageType.FILE_SYSTEM.getStorage("FileSystem-Test", fsProperties);
 
         Collection<FhStorage> s3Only = Collections.singletonList(s3Storage);
-        Schema s3OnlySchema = new Schema("S3-Only", null, null, s3Only, false);
+        Schema s3OnlySchema = new Schema("S3-Only", null, null, s3Only, false, false);
 
         Collection<FhStorage> fsOnly = Collections.singletonList(fsStorage);
-        Schema fsOnlySchema = new Schema("FileSystem-Only", null, null, fsOnly, false);
+        Schema fsOnlySchema = new Schema("FileSystem-Only", null, null, fsOnly, false, false);
 
         Collection<FhStorage> s3Andfs = new LinkedList<>();
         s3Andfs.add(s3Storage);
         s3Andfs.add(fsStorage);
-        Schema s3AndFsSchema = new Schema("S3-And-FileSystem", null, null, s3Andfs, false);
+        Schema s3AndFsSchema = new Schema("S3-And-FileSystem", null, null, s3Andfs, false, false);
 
         Map<String, FhStorage> storages = new LinkedHashMap<>();
         storages.put("S3-Test", s3Storage);
@@ -93,7 +93,7 @@ public class XLMPropertiesReaderData {
         Collection<FhStorage> s3Andfs = new LinkedList<>();
         s3Andfs.add(s3Storage);
         s3Andfs.add(fsStorage);
-        Schema s3AndFsSchema = new Schema("S3-And-FileSystem", null, fsStorage, s3Andfs, false);
+        Schema s3AndFsSchema = new Schema("S3-And-FileSystem", null, fsStorage, s3Andfs, false, false);
         s3AndFsSchema.setTemporaryMiddle(isTemporary);
         s3AndFsSchema.setTemporaryMiddle(isCache);
 
@@ -112,7 +112,7 @@ public class XLMPropertiesReaderData {
         FhStorage<FileSystemProperties> fsStorage = EnumStorageType.FILE_SYSTEM.getStorage("FileSystem-Test", fsProperties);
 
         Collection<FhStorage> fsOnly = Collections.singletonList(fsStorage);
-        Schema mySchema = new Schema("mySchema", null, null, fsOnly, false);
+        Schema mySchema = new Schema("mySchema", null, null, fsOnly, false, false);
 
         Map<String, FhStorage> storages = new LinkedHashMap<>();
         storages.put("FileSystem-Test", fsStorage);
@@ -133,7 +133,7 @@ public class XLMPropertiesReaderData {
         Collection<FhStorage> allSchema = new LinkedList<>();
         allSchema.add(s3Storage);
         allSchema.add(fsStorage);
-        Schema s3AndFsSchema = new Schema("all", null, null, allSchema, false);
+        Schema s3AndFsSchema = new Schema("all", null, null, allSchema, false, false);
 
         Map<String, FhStorage> storages = new LinkedHashMap<>();
         storages.put("S3-Test", s3Storage);
@@ -153,15 +153,15 @@ public class XLMPropertiesReaderData {
         FhStorage<FileSystemProperties> fsStorage = EnumStorageType.FILE_SYSTEM.getStorage("FileSystem-Test", fsProperties);
 
         Collection<FhStorage> s3Only = Collections.singletonList(s3Storage);
-        Schema s3OnlySchema = new Schema("S3-Only", null, null, s3Only, false);
+        Schema s3OnlySchema = new Schema("S3-Only", null, null, s3Only, false, false);
 
         Collection<FhStorage> fsOnly = Collections.singletonList(fsStorage);
-        Schema fsOnlySchema = new Schema("FileSystem-Only", null, null, fsOnly, false);
+        Schema fsOnlySchema = new Schema("FileSystem-Only", null, null, fsOnly, false, false);
 
         Collection<FhStorage> s3Andfs = new LinkedList<>();
         s3Andfs.add(s3Storage);
         s3Andfs.add(fsStorage);
-        Schema s3AndFsSchema = new Schema("S3-And-FileSystem", null, null, s3Andfs, false);
+        Schema s3AndFsSchema = new Schema("S3-And-FileSystem", null, null, s3Andfs, false, false);
 
         Trigger trigger = createTrigger("myTrigger");
         trigger.setAllowDirOperations(allowDirOperations);
@@ -193,15 +193,15 @@ public class XLMPropertiesReaderData {
         anotherTrigger.setAction(EnumTriggerAction.ALL);
 
         Collection<FhStorage> s3Only = Collections.singletonList(s3Storage);
-        Schema s3OnlySchema = new Schema("S3-Only", defaultTrigger, null, s3Only, false);
+        Schema s3OnlySchema = new Schema("S3-Only", defaultTrigger, null, s3Only, false, false);
 
         Collection<FhStorage> fsOnly = Collections.singletonList(fsStorage);
-        Schema fsOnlySchema = new Schema("FileSystem-Only", anotherTrigger, null, fsOnly, false);
+        Schema fsOnlySchema = new Schema("FileSystem-Only", anotherTrigger, null, fsOnly, false, false);
 
         Collection<FhStorage> s3Andfs = new LinkedList<>();
         s3Andfs.add(s3Storage);
         s3Andfs.add(fsStorage);
-        Schema s3AndFsSchema = new Schema("S3-And-FileSystem", defaultTrigger, null, s3Andfs, false);
+        Schema s3AndFsSchema = new Schema("S3-And-FileSystem", defaultTrigger, null, s3Andfs, false, false);
 
 
         Map<String, Trigger> triggers = new LinkedHashMap<>();

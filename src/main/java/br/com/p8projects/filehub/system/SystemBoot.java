@@ -46,7 +46,9 @@ public class SystemBoot {
                 "\nCurrent Date: " + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()) +
                 "\nRunning on port: " + properties.getAppPort() +
                 "\nVersion: " + properties.getSystemVersion() +
-                "\nStorage Reader Type: " + properties.getConfigType();
+                "\nStorage Reader Type: " + properties.getConfigType() +
+                "\nAPI Documentation: http://localhost:" + properties.getAppPort() + "/swagger-ui/index.html" +
+                "\nSwagger API Code: http://localhost:" + properties.getAppPort() + "/v2/api-docs";
         logger.info(logo);
     }
 

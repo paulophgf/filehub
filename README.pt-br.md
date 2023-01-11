@@ -1,17 +1,35 @@
 <p align="center">
-    <img src="https://user-images.githubusercontent.com/32067860/205514546-468d61e5-28a4-4e6f-a172-857330620b79.png" 
-    alt="drawing" width="200"/>
+<img src="https://user-images.githubusercontent.com/32067860/205514546-468d61e5-28a4-4e6f-a172-857330620b79.png" alt="drawing" width="200"/>
+
+![REST API](https://img.shields.io/badge/Config_Type-XML-red)
+[![Java Version](https://img.shields.io/badge/Java-19-blue)](https://www.oracle.com/br/java/technologies/downloads/)
+[![Spring Boot Version](https://img.shields.io/badge/Spring_Boot-2.7.6-darkgreen)](https://www.oracle.com/br/java/technologies/downloads/)
+[![License](https://shields.io/badge/License-MIT%2FApache--2.0-blue)](https://github.com/burn-rs/burn/blob/master/LICENSE)
+
 </p>
 
 Leia esse documento em outro idioma: [Inglês](README.md), [Português](README.pt-br.md)
 
-------------------------------------------------------------------------------------------------------------------------
+> O FileHub é um serviço que padroniza o gerenciamento de arquivos, independente da plataforma de armazenamento 
+> utilizada. Além disso, ele facilita a persistência de arquivos em mais de uma plataforma de armazenamento, 
+> servindo como gateway de requisições, de forma segura e prática.
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-O FileHub é um serviço que padroniza o gerenciamento de arquivos, independente da plataforma de armazenamento 
-utilizada. Além disso, ele facilita a persistência de arquivos em mais de uma plataforma de armazenamento, 
-servindo como gateway de requisições, de forma segura e prática.
 
+__Seções__
+
+* [Configuração](#configuração)
+* [Conceitos](#conceitos)
+  * [Storage](#storage)
+  * [Schema](#schema)
+  * [Trigger](#trigger)
+* [Operações](#operações)
+  * [Diretórios](#diretórios)
+  * [Upload](#upload)
+  * [Middle-Storage](#middle-storage)
+  * [Download](#download)
+  * [Cache-Storage](#cache-storage)
+* [Documentação da API](#documentação-da-api)
+* [Configuração Docker](#configuração-docker)
 
 <!--------------------------------------------------------------------------------------------------------------------->
 
@@ -76,7 +94,7 @@ Para informar ao serviço onde está o arquivo de configuração, utiliza-se as 
 <!--------------------------------------------------------------------------------------------------------------------->
 
 
-## Concepts
+## Conceitos
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Antes de executar o serviço é necessário definir quais plataformas de armazenamento serão utilizadas, além de 
@@ -612,7 +630,7 @@ FileHub fará o download do mesmo, porém deixando o arquivo salvo no primeiro s
 
 ````xml
 <schemas>
-    <schema name="myschema" middle="FileSystem-Test">
+    <schema name="myschema" middle="FileSystem-Test" cache="true">
         <storage-id>S3-Test</storage-id>
     </schema>
 </schemas>
@@ -639,7 +657,7 @@ arquivo também para o FileSystem-Test, o primeiro storage consultado.
 
 ### Documentação da API
 
-* Execute o serviço e acesso o seguinte endpoint: http://localhost:8088/swagger-ui.html
+* Execute o serviço e acesso o seguinte endpoint: http://localhost:8088/swagger-ui/index.html
 * Documentação no Apiary: https://filehub.docs.apiary.io
 
 -----
@@ -676,12 +694,13 @@ services:
     ports:
       - "8088:8088"
     volumes:
-      - {LOCAL_DIR}:/etc/hosts:ro
+      - /etc/hosts:/etc/hosts:ro
+      - {LOCAL_DIR}:/filehub # Substitua o valor da variável {LOCAL_DIR}
     environment:
       CONFIG_TYPE: "[LOCAL_FILE | GIT_FILE]" # Escolha umas das opções
-      LOCAL_FILE_PATH: "{LOCAL_DIR_PATH}" # Substitua o valor da variável
-      CONFIG_GIT_FILE_PATH: "{GIT_FILE_URL}" # Substitua o valor da variável
-      CONFIG_GIT_FILE_TOKEN: "{GIT_FILE_TOKEN}" # Substitua o valor da variável
+      LOCAL_FILE_PATH: "{LOCAL_DIR_PATH}" # Substitua o valor da variável {LOCAL_DIR_PATH}
+      CONFIG_GIT_FILE_PATH: "{GIT_FILE_URL}" # Substitua o valor da variável {GIT_FILE_URL}
+      CONFIG_GIT_FILE_TOKEN: "{GIT_FILE_TOKEN}" # Substitua o valor da variável {GIT_FILE_TOKEN}
       JAVA_OPTS : "-Xms512m -Xmx1024m"
 
 networks:
