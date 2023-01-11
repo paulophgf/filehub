@@ -181,7 +181,7 @@ public class FileSystemStorage extends FhStorage<FileSystemProperties> {
     private void executeTransfer(FhStorage destination, String pathDir, String filePath, String filename, boolean mkdir) {
         int readByteCount;
         byte[] buffer = new byte[4096];
-        try(InputStream in = new FileInputStream(filePath + filename);
+        try(InputStream in = new FileInputStream(filePath + File.separator +  filename);
             OutputStream out = destination.getOutputStreamFromStorage(pathDir, filename, mkdir)) {
             while((readByteCount = in.read(buffer)) != -1) {
                 out.write(buffer, 0, readByteCount);

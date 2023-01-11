@@ -55,17 +55,7 @@ public class DropboxStorage extends FhStorage<DropboxProperties> {
     public boolean createDirectory(String path) {
         DbxClientV2 client = getClient();
         String pathDir = properties.formatDirPath(path);
-        if(!existsDirectory(client, pathDir)) {
-            try {
-                client.files().createFolderV2(pathDir);
-            } catch (InvalidAccessTokenException e) {
-                throw new StorageException("Invalid or expired token (Dropbox storage)");
-            } catch (DbxException e) {
-                e.printStackTrace();
-                throw new StorageException("Error to create a directory using Dropbox: " + path);
-            }
-        }
-        return true;
+        return createDirectory(client, pathDir);
     }
 
     @Override
@@ -211,7 +201,7 @@ public class DropboxStorage extends FhStorage<DropboxProperties> {
             DbxClientV2 client = getClient();
             String path = properties.formatDirPath(pathDir);
             checkIfFolderExists(client, path, mkdir);
-            String keyfile = pathDir.endsWith("/") ? filename : pathDir + "/" + filename;
+            String keyfile = path.endsWith("/") ? filename : path + "/" + filename;
             outputStream = client.files().uploadBuilder(keyfile).start().getOutputStream();
         } catch (InvalidAccessTokenException e) {
             throw new StorageException("Invalid or expired token (Dropbox storage)");
@@ -233,7 +223,7 @@ public class DropboxStorage extends FhStorage<DropboxProperties> {
     private void executeTransfer(DbxClientV2 client, FhStorage destination, String pathDir, String filePath, String filename, boolean mkdir) {
         int readByteCount;
         byte[] buffer = new byte[4096];
-        try(InputStream in = client.files().downloadBuilder(filePath).start().getInputStream();
+        try(InputStream in = client.files().downloadBuilder(filePath + "/" + filename).start().getInputStream();
             OutputStream out = destination.getOutputStreamFromStorage(pathDir, filename, mkdir)) {
             while((readByteCount = in.read(buffer)) != -1) {
                 out.write(buffer, 0, readByteCount);
@@ -354,7 +344,7 @@ public class DropboxStorage extends FhStorage<DropboxProperties> {
                 if (!mkdir) {
                     throw new StorageException("Directory not found: " + path);
                 }
-                createDirectory(path);
+                createDirectory(client, path);
             }
         }
     }
@@ -363,6 +353,20 @@ public class DropboxStorage extends FhStorage<DropboxProperties> {
         if(!existsFile(client, filepath)) {
             throw new NotFoundException("File not found");
         }
+    }
+
+    private boolean createDirectory(DbxClientV2 client, String pathDir) {
+        if(!existsDirectory(client, pathDir)) {
+            try {
+                client.files().createFolderV2(pathDir);
+            } catch (InvalidAccessTokenException e) {
+                throw new StorageException("Invalid or expired token (Dropbox storage)");
+            } catch (DbxException e) {
+                e.printStackTrace();
+                throw new StorageException("Error to create a directory using Dropbox: " + pathDir);
+            }
+        }
+        return true;
     }
 
 }

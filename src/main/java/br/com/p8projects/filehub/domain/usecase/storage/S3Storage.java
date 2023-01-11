@@ -48,14 +48,7 @@ public class S3Storage extends FhStorage<S3Properties> {
     public boolean createDirectory(String directory) {
         AmazonS3 s3Client = authorizeOnS3();
         String pathDir = properties.formatDirPath(directory);
-        if(!s3Client.doesObjectExist(properties.getBucket(), pathDir)) {
-            ObjectMetadata metadata = new ObjectMetadata();
-            metadata.setContentLength(0);
-            InputStream emptyContent = new ByteArrayInputStream(new byte[0]);
-            PutObjectRequest putObjectRequest = new PutObjectRequest(properties.getBucket(), pathDir, emptyContent, metadata);
-            s3Client.putObject(putObjectRequest);
-        }
-        return true;
+        return createDirectory(s3Client, pathDir);
     }
 
     @Override
@@ -104,16 +97,17 @@ public class S3Storage extends FhStorage<S3Properties> {
         ListObjectsV2Result listing = s3Client.listObjectsV2(request);
         List<S3ObjectSummary> dirObjects = listing.getObjectSummaries();
         List<String> filesObjects = listing.getCommonPrefixes();
+        String filePath = pathDir.replace(properties.getBaseDir(), "");
         for (String file : filesObjects) {
             String fileName = file.substring(pathDir.length());
             ObjectMetadata metadata = s3Client.getObjectMetadata(properties.getBucket(), file);
-            fileItems.add(new FileItem(pathDir, fileName, file.endsWith("/"), metadata.getContentType(), metadata.getContentLength()));
+            fileItems.add(new FileItem(filePath, fileName, file.endsWith("/"), metadata.getContentType(), metadata.getContentLength()));
         }
         for (S3ObjectSummary file : dirObjects) {
             if (!file.getKey().equals(pathDir)) {
                 String fileName = file.getKey().substring(pathDir.length());
                 String mimeType = s3Client.getObjectMetadata(properties.getBucket(), file.getKey()).getContentType();
-                fileItems.add(new FileItem(pathDir, fileName, file.getKey().endsWith("/"), mimeType, file.getSize()));
+                fileItems.add(new FileItem(filePath, fileName, file.getKey().endsWith("/"), mimeType, file.getSize()));
             }
         }
         return fileItems;
@@ -177,7 +171,7 @@ public class S3Storage extends FhStorage<S3Properties> {
     @Override
     public OutputStream getOutputStreamFromStorage(String path, String filename, Boolean mkdir) {
         AmazonS3 s3Client = authorizeOnS3();
-        String pathDir = properties.formatDirPath(path);
+        String pathDir = properties.formatUploadFilePath(path);
         checkIfFolderExists(s3Client, pathDir, mkdir);
         String keyfile = pathDir + filename;
         return new S3OutputStream(s3Client, properties.getBucket(), keyfile);
@@ -187,7 +181,7 @@ public class S3Storage extends FhStorage<S3Properties> {
     @Override
     public void transfer(FhStorage destination, UploadMultipartObject uploadMultipartObject) {
         AmazonS3 s3Client = authorizeOnS3();
-        String filePath = properties.formatDirPath(uploadMultipartObject.getPath());
+        String filePath = properties.formatUploadFilePath(uploadMultipartObject.getPath());
         for(UploadMultipartObject.FileUploadObject file : uploadMultipartObject.getFiles()) {
             executeTransfer(s3Client, destination, uploadMultipartObject.getPath(), filePath, file.getFilename(), uploadMultipartObject.isMkdir());
         }
@@ -196,7 +190,7 @@ public class S3Storage extends FhStorage<S3Properties> {
     private void executeTransfer(AmazonS3 s3Client, FhStorage destination, String pathDir, String filePath, String filename, boolean mkdir) {
         int readByteCount;
         byte[] buffer = new byte[4096];
-        S3Object fileObject = s3Client.getObject(properties.getBucket(), filePath);
+        S3Object fileObject = s3Client.getObject(properties.getBucket(), filePath + filename);
         try(InputStream in = fileObject.getObjectContent();
             OutputStream out = destination.getOutputStreamFromStorage(pathDir, filename, mkdir)) {
             while((readByteCount = in.read(buffer)) != -1) {
@@ -307,9 +301,20 @@ public class S3Storage extends FhStorage<S3Properties> {
                 if (!mkdir) {
                     throw new StorageException("Directory not found: " + filepath);
                 }
-                createDirectory(filepath);
+                createDirectory(s3Client, filepath);
             }
         }
+    }
+
+    private boolean createDirectory(AmazonS3 s3Client, String pathDir) {
+        if(!s3Client.doesObjectExist(properties.getBucket(), pathDir)) {
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentLength(0);
+            InputStream emptyContent = new ByteArrayInputStream(new byte[0]);
+            PutObjectRequest putObjectRequest = new PutObjectRequest(properties.getBucket(), pathDir, emptyContent, metadata);
+            s3Client.putObject(putObjectRequest);
+        }
+        return true;
     }
 
 }
