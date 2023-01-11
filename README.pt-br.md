@@ -1,4 +1,4 @@
-<p align="center">
+<div align="center">
 <img src="https://user-images.githubusercontent.com/32067860/205514546-468d61e5-28a4-4e6f-a172-857330620b79.png" alt="drawing" width="200"/>
 
 ![REST API](https://img.shields.io/badge/Config_Type-XML-red)
@@ -6,7 +6,7 @@
 [![Spring Boot Version](https://img.shields.io/badge/Spring_Boot-2.7.6-darkgreen)](https://www.oracle.com/br/java/technologies/downloads/)
 [![License](https://shields.io/badge/License-MIT%2FApache--2.0-blue)](https://github.com/burn-rs/burn/blob/master/LICENSE)
 
-</p>
+</div>
 
 Leia esse documento em outro idioma: [Inglês](README.md), [Português](README.pt-br.md)
 
