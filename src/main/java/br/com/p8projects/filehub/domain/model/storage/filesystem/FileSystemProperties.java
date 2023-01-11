@@ -41,7 +41,11 @@ public class FileSystemProperties implements StorageProperties, Cloneable {
     }
 
     public String formatFilePath(String path) {
-        return baseDir + path.replace("/", File.separator);
+        path = path.replace("/", File.separator);
+        if(path.startsWith(File.separator)) {
+            path = path.substring(1);
+        }
+        return baseDir + path;
     }
 
     @Override

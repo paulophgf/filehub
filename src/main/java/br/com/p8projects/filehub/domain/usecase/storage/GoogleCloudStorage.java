@@ -108,6 +108,7 @@ public class GoogleCloudStorage extends FhStorage<GoogleCloudProperties> {
             String itemPath = blob.getName();
             if("".equals(pathDir) || !pathDir.equals(itemPath)) {
                 String itemName = blob.getName().replace(pathDir, "");
+                itemPath = itemPath.replace(properties.getBaseDir(), "");
                 list.add(new FileItem(itemPath, itemName, blob.isDirectory(), blob.getContentType(), blob.getSize()));
             }
         });
@@ -205,9 +206,8 @@ public class GoogleCloudStorage extends FhStorage<GoogleCloudProperties> {
     private void executeTransfer(Storage googleStorage, FhStorage destination, String pathDir, String filePath, String filename, boolean mkdir) {
         int readByteCount;
         byte[] buffer = new byte[4096];
-        BlobId blobId = BlobId.of(properties.getBucket(), filePath);
-        BlobInfo blobInfo = BlobInfo.newBuilder(blobId).build();
-        Blob newBlob = googleStorage.create(blobInfo);
+        BlobId blobId = BlobId.of(properties.getBucket(), filePath + filename);
+        Blob newBlob = googleStorage.get(blobId);
 
         try(InputStream in = Channels.newInputStream(newBlob.reader());
             OutputStream out = destination.getOutputStreamFromStorage(pathDir, filename, mkdir)) {

@@ -79,7 +79,7 @@ public class FileManager {
                 Path path = Paths.get(filePath);
                 String fileName = path.getFileName().toString();
                 String dirPath = path.getParent().toString();
-                OutputStream middleOutputStream = schema.getMiddle().getOutputStreamFromStorage(fileName, dirPath, true);
+                OutputStream middleOutputStream = schema.getMiddle().getOutputStreamFromStorage(dirPath, fileName, true);
                 copy(storage.downloadFile(filePath), response.getOutputStream(), middleOutputStream);
             }
         } else {
@@ -116,10 +116,21 @@ public class FileManager {
             log.info("MIDDLE MODE");
             FhStorage middle = uploadMultipartObject.getSchema().getMiddle();
             middle.upload(uploadMultipartObject);
+            boolean isTemp = !storages.contains(middle);
             new Thread(() -> {
-                storages.remove(middle);
                 for (FhStorage storage : storages) {
-                    middle.transfer(storage, uploadMultipartObject);
+                    if(!storage.equals(middle)) {
+                        middle.transfer(storage, uploadMultipartObject);
+                    }
+                }
+                if(isTemp) {
+                    log.info("REMOVING FILES FROM TEMPORARY STORAGE");
+                    for(UploadMultipartObject.FileUploadObject uploadObject : uploadMultipartObject.getFiles()) {
+                        String filePath = uploadMultipartObject.getPath();
+                        filePath += filePath.endsWith("/") ? uploadObject.getFilename() : "/" + uploadObject.getFilename();
+                        log.info("Filepath = " + filePath);
+                        middle.delete(filePath);
+                    }
                 }
             }).start();
         } else {
