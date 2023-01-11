@@ -1,17 +1,34 @@
 <p align="center">
-    <img src="https://user-images.githubusercontent.com/32067860/205514546-468d61e5-28a4-4e6f-a172-857330620b79.png" 
-    alt="drawing" width="200"/>
+<img src="https://user-images.githubusercontent.com/32067860/205514546-468d61e5-28a4-4e6f-a172-857330620b79.png" alt="drawing" width="200"/>
+
+![REST API](https://img.shields.io/badge/Config_Type-XML-red)
+[![Java Version](https://img.shields.io/badge/Java-19-blue)](https://www.oracle.com/br/java/technologies/downloads/)
+[![Spring Boot Version](https://img.shields.io/badge/Spring_Boot-2.7.6-darkgreen)](https://www.oracle.com/br/java/technologies/downloads/)
+[![License](https://shields.io/badge/License-MIT%2FApache--2.0-blue)](https://github.com/burn-rs/burn/blob/master/LICENSE)
+
 </p>
 
 Read this in other languages: [English](README.md), [Portuguese](README.pt-br.md)
 
-------------------------------------------------------------------------------------------------------------------------
+> The FileHub is a service that standardizes file management, independent of the storage platform used. 
+> Moreover, it makes file persistence easier when we think about multiple storage places, serving as requests 
+> gateway, using a safe and easy way.
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-The FileHub is a service that standardizes file management, independent of the storage platform used. 
-Moreover, it makes file persistence easier when we think about multiple storage places, serving as requests 
-gateway, using a safe and easy way.
+__Sections__
 
+* [Configuration](#configuration)
+* [Concepts](#concepts)
+    * [Storage](#storage)
+    * [Schema](#schema)
+    * [Trigger](#trigger)
+* [Operations](#operations)
+  * [Directories](#directories)
+  * [Upload](#upload)
+  * [Middle-Storage](#middle-storage)
+  * [Download](#download)
+  * [Cache-Storage](#cache-storage)
+* [API Documentation](#api-documentation)
+* [Docker Configuration](#docker-configuration)
 
 <!--------------------------------------------------------------------------------------------------------------------->
 
@@ -251,7 +268,7 @@ storages linked.
 ````
 <p align="center"><sub>Schema declaration example</sub></p> <br>
 
-### Auto Schemas
+#### Auto Schemas
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 It is not necessary to declare a schema for each storage to perform storage operations individually. It is possible to 
@@ -558,7 +575,7 @@ In the example above, in an upload operation, the FileSystem-Test storage will r
 to the consumer application and will then transfer the file to the S3-Test storage.
 
 
-### Temporary Middle-Storage
+#### Temporary Middle-Storage
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 A storage defined as middle-storage and not included in the one of schema storages will be a temporary storage. 
@@ -597,7 +614,7 @@ it, leaving the file saved in the first storage as well.
 
 ````xml
 <schemas>
-    <schema name="myschema" middle="FileSystem-Test">
+    <schema name="myschema" middle="FileSystem-Test" cache="true">
         <storage-id>S3-Test</storage-id>
     </schema>
 </schemas>
@@ -622,9 +639,9 @@ file to the FileSystem-Test. On the other hand, the FileHub will return a not fo
 
 -----
 
-### API Documentation
+## API Documentation
 
-* Run the service and access: http://localhost:8088/swagger-ui.html
+* Run the service and access: http://localhost:8088/swagger-ui/index.html
 * Apiary Docs: https://filehub.docs.apiary.io
 
 -----
@@ -664,12 +681,12 @@ services:
       - "8088:8088"
     volumes:
       - /etc/hosts:/etc/hosts:ro
-      - {LOCAL_DIR}:/filehub
+      - {LOCAL_DIR}:/filehub # Replace the variable {LOCAL_DIR}
     environment:
       CONFIG_TYPE: "[LOCAL_FILE | GIT_FILE]" # Choose one option
-      LOCAL_FILE_PATH: "{LOCAL_DIR_PATH}" # Replace the variable value
-      CONFIG_GIT_FILE_PATH: "{GIT_FILE_URL}" # Replace the variable value
-      CONFIG_GIT_FILE_TOKEN: "{GIT_FILE_TOKEN}" # Replace the variable value
+      LOCAL_FILE_PATH: "{LOCAL_DIR_PATH}" # Replace the variable {LOCAL_DIR_PATH}
+      CONFIG_GIT_FILE_PATH: "{GIT_FILE_URL}" # Replace the variable {GIT_FILE_URL}
+      CONFIG_GIT_FILE_TOKEN: "{GIT_FILE_TOKEN}" # Replace the variable {GIT_FILE_TOKEN}
       JAVA_OPTS : "-Xms512m -Xmx1024m"
 
 networks:

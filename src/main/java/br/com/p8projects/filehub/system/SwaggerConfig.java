@@ -25,7 +25,7 @@ public class SwaggerConfig {
                         .build())
                 .enable(true)
                 .select()
-                .apis(RequestHandlerSelectors.basePackage("br.com.mpps.filehub"))
+                .apis(RequestHandlerSelectors.basePackage("br.com.p8projects.filehub"))
                 .paths(PathSelectors.any())
                 .build();
     }
