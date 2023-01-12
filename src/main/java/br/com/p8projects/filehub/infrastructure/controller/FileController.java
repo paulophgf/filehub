@@ -100,7 +100,7 @@ public class FileController {
                              @PathVariable("schema") String schemaId,
                              @ApiParam(value = "TRUE: Force the download by a web browser\n" +
                                                "FALSE: Can play or execute the file by a web browser", defaultValue = "false")
-                             @RequestParam(value = "download", required = false, defaultValue = "false") boolean download,
+                             @RequestParam(value = "attachment", required = false, defaultValue = "false") boolean attachment,
                          HttpServletRequest request, HttpServletResponse response) throws IOException {
         Schema schema = StorageResourceReader.getSchema(schemaId);
         String originalPath = request.getRequestURI().replace("/schema/" + schemaId + "/file/", "/");
@@ -110,7 +110,7 @@ public class FileController {
         }
         String contentType = fileManager.getContentType(schema, fileLocation.getPath());
         response.setContentType(contentType);
-        if(download) {
+        if(attachment) {
             response.setHeader("Content-disposition", "attachment");
         }
         fileManager.downloadFile(schema, fileLocation.getPath(), response);
