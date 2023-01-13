@@ -65,17 +65,29 @@ public class Schema {
     public FhStorage getFirstUsefulStorage() {
         FhStorage storage;
         if(middle != null) {
-            if(!isTemporaryMiddle && !isCacheEnabled) {
-                storage = middle;
-            } else {
-                Iterator<FhStorage> storageIterator = storages.iterator();
-                storage = storageIterator.next();
-                if(storage.equals(middle)) {
-                    storage = storageIterator.next();
-                }
-            }
+            storage = isCacheEnabled ? nextStorageForCache() : middle;
         } else {
             storage = storages.stream().findFirst().get();
+        }
+        return storage;
+    }
+
+    public FhStorage getCacheStorage() {
+        FhStorage storage;
+        if(middle != null) {
+            storage = middle;
+        } else {
+            storage = storages.stream().findFirst().get();
+        }
+        return storage;
+    }
+
+    public FhStorage nextStorageForCache() {
+        FhStorage storage;
+        Iterator<FhStorage> storageIterator = storages.iterator();
+        storage = storageIterator.next();
+        if(storage.equals(getCacheStorage())) {
+            storage = storageIterator.next();
         }
         return storage;
     }

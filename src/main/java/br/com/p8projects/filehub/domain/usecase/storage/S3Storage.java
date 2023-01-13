@@ -3,7 +3,9 @@ package br.com.p8projects.filehub.domain.usecase.storage;
 import br.com.p8projects.filehub.domain.exceptions.NotFoundException;
 import br.com.p8projects.filehub.domain.exceptions.StorageException;
 import br.com.p8projects.filehub.domain.exceptions.UploadException;
-import br.com.p8projects.filehub.domain.model.*;
+import br.com.p8projects.filehub.domain.model.FileItem;
+import br.com.p8projects.filehub.domain.model.FileMetadata;
+import br.com.p8projects.filehub.domain.model.TransferFileObject;
 import br.com.p8projects.filehub.domain.model.config.FhStorage;
 import br.com.p8projects.filehub.domain.model.storage.Base64File;
 import br.com.p8projects.filehub.domain.model.storage.s3.S3OutputStream;
@@ -11,6 +13,7 @@ import br.com.p8projects.filehub.domain.model.storage.s3.S3Properties;
 import br.com.p8projects.filehub.domain.model.upload.Base64Upload;
 import br.com.p8projects.filehub.domain.model.upload.UploadBase64Object;
 import br.com.p8projects.filehub.domain.model.upload.UploadMultipartObject;
+import br.com.p8projects.filehub.domain.model.upload.UploadObject;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
@@ -169,38 +172,57 @@ public class S3Storage extends FhStorage<S3Properties> {
 
 
     @Override
-    public OutputStream getOutputStreamFromStorage(String path, String filename, Boolean mkdir) {
+    public OutputStream getOutputStreamFromStorage(UploadObject uploadObject, String filename, String contentType) {
         AmazonS3 s3Client = authorizeOnS3();
-        String pathDir = properties.formatUploadFilePath(path);
-        checkIfFolderExists(s3Client, pathDir, mkdir);
-        String keyfile = pathDir + filename;
-        return new S3OutputStream(s3Client, properties.getBucket(), keyfile);
+        String pathDir = properties.formatUploadFilePath(uploadObject.getPath());
+        checkIfFolderExists(s3Client, pathDir, uploadObject.isMkdir());
+        return new S3OutputStream(s3Client, properties.getBucket(), pathDir + filename);
     }
 
+    @Override
+    public void writeFileInputStream(TransferFileObject transfer, boolean isMkdir) {
+        AmazonS3 s3Client = authorizeOnS3();
+        String pathDir = properties.formatUploadFilePath(transfer.getPath());
+        checkIfFolderExists(s3Client, pathDir, isMkdir);
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentType(transfer.getContentType());
+        metadata.setContentLength(transfer.getLenght());
+        try(InputStream in = transfer.getInputStream()) {
+            s3Client.putObject(properties.getBucket(), pathDir + transfer.getFilename(), in, metadata);
+        } catch (IOException e) {
+            throw new UploadException("Error to upload the file " + transfer.getFilename(), e);
+        }
+    }
+
+    @Override
+    public TransferFileObject getTransferFileObject(String originalPath, String filename) {
+        AmazonS3 s3Client = authorizeOnS3();
+        String path = properties.formatUploadFilePath(originalPath);
+        return getTransferFileObject(s3Client, path, originalPath, filename);
+    }
+
+    private TransferFileObject getTransferFileObject(AmazonS3 s3Client, String path, String originalPath, String filename) {
+        S3Object fileObject = s3Client.getObject(properties.getBucket(), path + filename);
+        ObjectMetadata metadata = fileObject.getObjectMetadata();
+
+        TransferFileObject transferFileObject = new TransferFileObject();
+        transferFileObject.setPath(originalPath);
+        transferFileObject.setFilename(filename);
+        transferFileObject.setLenght(metadata.getContentLength());
+        transferFileObject.setContentType(metadata.getContentType());
+        transferFileObject.setInputStream(fileObject.getObjectContent());
+        return transferFileObject;
+    }
 
     @Override
     public void transfer(FhStorage destination, UploadMultipartObject uploadMultipartObject) {
         AmazonS3 s3Client = authorizeOnS3();
         String filePath = properties.formatUploadFilePath(uploadMultipartObject.getPath());
         for(UploadMultipartObject.FileUploadObject file : uploadMultipartObject.getFiles()) {
-            executeTransfer(s3Client, destination, uploadMultipartObject.getPath(), filePath, file.getFilename(), uploadMultipartObject.isMkdir());
+            TransferFileObject transferFileObject = getTransferFileObject(s3Client, filePath, uploadMultipartObject.getPath(), file.getFilename());
+            destination.writeFileInputStream(transferFileObject, uploadMultipartObject.isMkdir());
         }
     }
-
-    private void executeTransfer(AmazonS3 s3Client, FhStorage destination, String pathDir, String filePath, String filename, boolean mkdir) {
-        int readByteCount;
-        byte[] buffer = new byte[4096];
-        S3Object fileObject = s3Client.getObject(properties.getBucket(), filePath + filename);
-        try(InputStream in = fileObject.getObjectContent();
-            OutputStream out = destination.getOutputStreamFromStorage(pathDir, filename, mkdir)) {
-            while((readByteCount = in.read(buffer)) != -1) {
-                out.write(buffer, 0, readByteCount);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Error to transfer the file " + filename, e);
-        }
-    }
-
 
 
     @Override

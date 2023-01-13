@@ -3,13 +3,16 @@ package br.com.p8projects.filehub.domain.usecase.storage;
 import br.com.p8projects.filehub.domain.exceptions.NotFoundException;
 import br.com.p8projects.filehub.domain.exceptions.StorageException;
 import br.com.p8projects.filehub.domain.exceptions.UploadException;
-import br.com.p8projects.filehub.domain.model.*;
+import br.com.p8projects.filehub.domain.model.FileItem;
+import br.com.p8projects.filehub.domain.model.FileMetadata;
+import br.com.p8projects.filehub.domain.model.TransferFileObject;
 import br.com.p8projects.filehub.domain.model.config.FhStorage;
 import br.com.p8projects.filehub.domain.model.storage.Base64File;
 import br.com.p8projects.filehub.domain.model.storage.filesystem.FileSystemProperties;
 import br.com.p8projects.filehub.domain.model.upload.Base64Upload;
 import br.com.p8projects.filehub.domain.model.upload.UploadBase64Object;
 import br.com.p8projects.filehub.domain.model.upload.UploadMultipartObject;
+import br.com.p8projects.filehub.domain.model.upload.UploadObject;
 import org.apache.commons.io.FileUtils;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -162,32 +165,57 @@ public class FileSystemStorage extends FhStorage<FileSystemProperties> {
 
 
     @Override
-    public OutputStream getOutputStreamFromStorage(String pathDir, String filename, Boolean mkdir) throws IOException {
-        String filePath = properties.formatFilePath(pathDir);
-        checkIfFolderExists(pathDir, mkdir);
+    public OutputStream getOutputStreamFromStorage(UploadObject uploadObject, String filename, String contentType) throws IOException {
+        String filePath = properties.formatFilePath(uploadObject.getPath());
+        checkIfFolderExists(uploadObject.getPath(), uploadObject.isMkdir());
         Path filepath = Paths.get(filePath, filename);
         createFileIfNotExists(filepath);
         return new FileOutputStream(filepath.toFile());
     }
 
     @Override
-    public void transfer(FhStorage destination, UploadMultipartObject uploadMultipartObject) {
-        String filePath = properties.formatFilePath(uploadMultipartObject.getPath());
-        for(UploadMultipartObject.FileUploadObject file : uploadMultipartObject.getFiles()) {
-            executeTransfer(destination, uploadMultipartObject.getPath(), filePath, file.getFilename(), uploadMultipartObject.isMkdir());
+    public void writeFileInputStream(TransferFileObject transfer, boolean isMkdir) {
+        String filePath = properties.formatFilePath(transfer.getPath());
+        checkIfFolderExists(transfer.getPath(), isMkdir);
+        Path filepath = Paths.get(filePath, transfer.getFilename());
+        createFileIfNotExists(filepath);
+        try(InputStream in = transfer.getInputStream()) {
+            Files.write(filepath, in.readAllBytes());
+        } catch (IOException e) {
+            throw new UploadException("Error to upload the file " + transfer.getFilename(), e);
         }
     }
 
-    private void executeTransfer(FhStorage destination, String pathDir, String filePath, String filename, boolean mkdir) {
-        int readByteCount;
-        byte[] buffer = new byte[4096];
-        try(InputStream in = new FileInputStream(filePath + File.separator +  filename);
-            OutputStream out = destination.getOutputStreamFromStorage(pathDir, filename, mkdir)) {
-            while((readByteCount = in.read(buffer)) != -1) {
-                out.write(buffer, 0, readByteCount);
-            }
+    @Override
+    public TransferFileObject getTransferFileObject(String originalPath, String filename) {
+        String path = properties.formatFilePath(originalPath);
+        return getTransferFileObject(path, originalPath, filename);
+    }
+
+    private TransferFileObject getTransferFileObject(String path, String originalPath, String filename) {
+        try {
+            File currentFile = new File(path + File.separator + filename);
+            String contentType = URLConnection.guessContentTypeFromName(filename);
+            InputStream in = new FileInputStream(currentFile.getAbsolutePath());
+
+            TransferFileObject transferFileObject = new TransferFileObject();
+            transferFileObject.setPath(originalPath);
+            transferFileObject.setFilename(filename);
+            transferFileObject.setLenght(currentFile.length());
+            transferFileObject.setContentType(contentType);
+            transferFileObject.setInputStream(in);
+            return transferFileObject;
         } catch (IOException e) {
             throw new RuntimeException("Error to transfer the file " + filename, e);
+        }
+    }
+
+    @Override
+    public void transfer(FhStorage destination, UploadMultipartObject uploadMultipartObject) {
+        String filePath = properties.formatFilePath(uploadMultipartObject.getPath());
+        for(UploadMultipartObject.FileUploadObject file : uploadMultipartObject.getFiles()) {
+            TransferFileObject transferFileObject = getTransferFileObject(filePath, uploadMultipartObject.getPath(), file.getFilename());
+            destination.writeFileInputStream(transferFileObject, uploadMultipartObject.isMkdir());
         }
     }
 

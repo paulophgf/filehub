@@ -1,14 +1,13 @@
 package br.com.p8projects.filehub.domain.usecase;
 
-import br.com.p8projects.filehub.domain.exceptions.UploadException;
-import br.com.p8projects.filehub.domain.model.*;
-import br.com.p8projects.filehub.domain.model.config.Schema;
+import br.com.p8projects.filehub.domain.model.FileMetadata;
+import br.com.p8projects.filehub.domain.model.TransferFileObject;
 import br.com.p8projects.filehub.domain.model.config.FhStorage;
+import br.com.p8projects.filehub.domain.model.config.Schema;
 import br.com.p8projects.filehub.domain.model.upload.UploadBase64Object;
 import br.com.p8projects.filehub.domain.model.upload.UploadMultipartObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -16,7 +15,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Collection;
 
 @Slf4j
 @Service
@@ -71,16 +70,17 @@ public class FileManager {
     public void downloadFile(Schema schema, String filePath, HttpServletResponse response) throws IOException {
         FhStorage storage;
         if(schema.isCacheEnabled()) {
-            if(schema.getMiddle().existsFile(filePath)) {
-                storage = schema.getMiddle();
-                copy(storage.downloadFile(filePath), response.getOutputStream());
+            FhStorage cacheStorage = schema.getCacheStorage();
+            if(cacheStorage.existsFile(filePath)) {
+                copy(cacheStorage.downloadFile(filePath), response.getOutputStream());
             } else {
-                storage = schema.getFirstUsefulStorage();
+                FhStorage nextStorage = schema.nextStorageForCache();
                 Path path = Paths.get(filePath);
                 String fileName = path.getFileName().toString();
-                String dirPath = path.getParent().toString();
-                OutputStream middleOutputStream = schema.getMiddle().getOutputStreamFromStorage(dirPath, fileName, true);
-                copy(storage.downloadFile(filePath), response.getOutputStream(), middleOutputStream);
+                String dirPath = path.getParent().toString().replace("\\", "/");
+                TransferFileObject transferFileObject = nextStorage.getTransferFileObject(dirPath, fileName);
+                cacheStorage.writeFileInputStream(transferFileObject, true);
+                copy(nextStorage.downloadFile(filePath), response.getOutputStream());
             }
         } else {
             storage = schema.getFirstUsefulStorage();
@@ -140,47 +140,47 @@ public class FileManager {
         }
     }
 
-    private void uploadParallel(Schema schema, String path, MultipartFile[] files, Boolean mkdir) {
-        log.info("PARALLEL");
-        for(MultipartFile multipartFile : files) {
-            int readByteCount;
-            byte[] buffer = new byte[4096];
-            List<OutputStream> outputStreamList = openOutputStreamList(schema.getStorages(), path, multipartFile, mkdir);
-            try(InputStream in = multipartFile.getInputStream()) {
-                while((readByteCount = in.read(buffer)) != -1) {
-                    for(OutputStream out : outputStreamList) {
-                        out.write(buffer, 0, readByteCount);
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                closeOutputStreamList(outputStreamList);
-            }
-        }
-    }
+//    private void uploadParallel(Schema schema, String path, MultipartFile[] files, Boolean mkdir) {
+//        log.info("PARALLEL");
+//        for(MultipartFile multipartFile : files) {
+//            int readByteCount;
+//            byte[] buffer = new byte[4096];
+//            List<OutputStream> outputStreamList = openOutputStreamList(schema.getStorages(), path, multipartFile, mkdir);
+//            try(InputStream in = multipartFile.getInputStream()) {
+//                while((readByteCount = in.read(buffer)) != -1) {
+//                    for(OutputStream out : outputStreamList) {
+//                        out.write(buffer, 0, readByteCount);
+//                    }
+//                }
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            } finally {
+//                closeOutputStreamList(outputStreamList);
+//            }
+//        }
+//    }
 
-    private List<OutputStream> openOutputStreamList(Collection<FhStorage> storages, String path, MultipartFile file, Boolean mkdir) {
-        List<OutputStream> outputStreamList = new ArrayList<>();
-        try {
-            for (FhStorage storage : storages) {
-                OutputStream outputStream = storage.getOutputStreamFromStorage(path, file.getOriginalFilename(), mkdir);
-                outputStreamList.add(outputStream);
-            }
-        } catch (IOException e) {
-            throw new UploadException("Error to open the output stream list in parallel mode", e);
-        }
-        return outputStreamList;
-    }
+//    private List<OutputStream> openOutputStreamList(Collection<FhStorage> storages, String path, MultipartFile file, Boolean mkdir) {
+//        List<OutputStream> outputStreamList = new ArrayList<>();
+//        try {
+//            for (FhStorage storage : storages) {
+//                OutputStream outputStream = storage.getOutputStreamFromStorage(path, file.getOriginalFilename(), mkdir);
+//                outputStreamList.add(outputStream);
+//            }
+//        } catch (IOException e) {
+//            throw new UploadException("Error to open the output stream list in parallel mode", e);
+//        }
+//        return outputStreamList;
+//    }
 
-    private void closeOutputStreamList(List<OutputStream> outputStreamList) {
-        for(OutputStream out : outputStreamList) {
-            try {
-                out.close();
-            } catch (IOException e) {
-                throw new UploadException("Error to close the output stream list in parallel mode", e);
-            }
-        }
-    }
+//    private void closeOutputStreamList(List<OutputStream> outputStreamList) {
+//        for(OutputStream out : outputStreamList) {
+//            try {
+//                out.close();
+//            } catch (IOException e) {
+//                throw new UploadException("Error to close the output stream list in parallel mode", e);
+//            }
+//        }
+//    }
 
 }

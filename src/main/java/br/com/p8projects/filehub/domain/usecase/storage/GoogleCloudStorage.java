@@ -3,13 +3,16 @@ package br.com.p8projects.filehub.domain.usecase.storage;
 import br.com.p8projects.filehub.domain.exceptions.NotFoundException;
 import br.com.p8projects.filehub.domain.exceptions.StorageException;
 import br.com.p8projects.filehub.domain.exceptions.UploadException;
-import br.com.p8projects.filehub.domain.model.*;
+import br.com.p8projects.filehub.domain.model.FileItem;
+import br.com.p8projects.filehub.domain.model.FileMetadata;
+import br.com.p8projects.filehub.domain.model.TransferFileObject;
 import br.com.p8projects.filehub.domain.model.config.FhStorage;
 import br.com.p8projects.filehub.domain.model.storage.Base64File;
 import br.com.p8projects.filehub.domain.model.storage.google.GoogleCloudProperties;
 import br.com.p8projects.filehub.domain.model.upload.Base64Upload;
 import br.com.p8projects.filehub.domain.model.upload.UploadBase64Object;
 import br.com.p8projects.filehub.domain.model.upload.UploadMultipartObject;
+import br.com.p8projects.filehub.domain.model.upload.UploadObject;
 import br.com.p8projects.filehub.system.FilePathUtils;
 import com.google.api.gax.paging.Page;
 import com.google.auth.Credentials;
@@ -181,13 +184,13 @@ public class GoogleCloudStorage extends FhStorage<GoogleCloudProperties> {
 
 
     @Override
-    public OutputStream getOutputStreamFromStorage(String path, String filename, Boolean mkdir) {
+    public OutputStream getOutputStreamFromStorage(UploadObject uploadObject, String filename, String contentType) {
         Storage googleStorage = getStorage();
-        String pathDir = properties.formatDirPath(path);
-        checkIfFolderExists(googleStorage, pathDir, mkdir);
+        String pathDir = properties.formatDirPath(uploadObject.getPath());
+        checkIfFolderExists(googleStorage, pathDir, uploadObject.isMkdir());
 
         BlobId blobId = BlobId.of(properties.getBucket(), pathDir + filename);
-        BlobInfo blobInfo = BlobInfo.newBuilder(blobId).build();
+        BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType(contentType).build();
 
         Blob output = googleStorage.create(blobInfo);
         WriteChannel writeChannel = output.writer();
@@ -195,27 +198,47 @@ public class GoogleCloudStorage extends FhStorage<GoogleCloudProperties> {
     }
 
     @Override
+    public void writeFileInputStream(TransferFileObject transfer, boolean isMkdir) {
+        Storage googleStorage = getStorage();
+        String pathDir = properties.formatDirPath(transfer.getPath());
+        checkIfFolderExists(googleStorage, pathDir, isMkdir);
+        Storage.BlobTargetOption precondition = Storage.BlobTargetOption.doesNotExist();
+        BlobId blobId = BlobId.of(properties.getBucket(), pathDir + transfer.getFilename());
+        BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType(transfer.getContentType()).build();
+        try(InputStream in = transfer.getInputStream()) {
+            googleStorage.create(blobInfo, in.readAllBytes(), precondition);
+        } catch (IOException e) {
+            throw new UploadException("Error to upload the file " + transfer.getFilename(), e);
+        }
+    }
+
+    @Override
+    public TransferFileObject getTransferFileObject(String originalPath, String filename) {
+        Storage googleStorage = getStorage();
+        String path = properties.formatDirPath(originalPath);
+        return getTransferFileObject(googleStorage, path, originalPath, filename);
+    }
+
+    private TransferFileObject getTransferFileObject(Storage googleStorage, String path, String originalPath, String filename) {
+        BlobId blobId = BlobId.of(properties.getBucket(), path + filename);
+        Blob newBlob = googleStorage.get(blobId);
+
+        TransferFileObject transferFileObject = new TransferFileObject();
+        transferFileObject.setPath(originalPath);
+        transferFileObject.setFilename(filename);
+        transferFileObject.setLenght(newBlob.getSize());
+        transferFileObject.setContentType(newBlob.getContentType());
+        transferFileObject.setInputStream(Channels.newInputStream(newBlob.reader()));
+        return transferFileObject;
+    }
+
+    @Override
     public void transfer(FhStorage destination, UploadMultipartObject uploadMultipartObject) {
         Storage googleStorage = getStorage();
         String filePath = properties.formatDirPath(uploadMultipartObject.getPath());
         for(UploadMultipartObject.FileUploadObject file : uploadMultipartObject.getFiles()) {
-            executeTransfer(googleStorage, destination, uploadMultipartObject.getPath(), filePath, file.getFilename(), uploadMultipartObject.isMkdir());
-        }
-    }
-
-    private void executeTransfer(Storage googleStorage, FhStorage destination, String pathDir, String filePath, String filename, boolean mkdir) {
-        int readByteCount;
-        byte[] buffer = new byte[4096];
-        BlobId blobId = BlobId.of(properties.getBucket(), filePath + filename);
-        Blob newBlob = googleStorage.get(blobId);
-
-        try(InputStream in = Channels.newInputStream(newBlob.reader());
-            OutputStream out = destination.getOutputStreamFromStorage(pathDir, filename, mkdir)) {
-            while((readByteCount = in.read(buffer)) != -1) {
-                out.write(buffer, 0, readByteCount);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Error to transfer the file " + filename, e);
+            TransferFileObject transferFileObject = getTransferFileObject(googleStorage, filePath, uploadMultipartObject.getPath(), file.getFilename());
+            destination.writeFileInputStream(transferFileObject, uploadMultipartObject.isMkdir());
         }
     }
 

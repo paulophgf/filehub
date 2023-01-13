@@ -4,6 +4,7 @@ import br.com.p8projects.filehub.domain.model.*;
 import br.com.p8projects.filehub.domain.model.config.FhStorage;
 import br.com.p8projects.filehub.domain.model.upload.UploadBase64Object;
 import br.com.p8projects.filehub.domain.model.upload.UploadMultipartObject;
+import br.com.p8projects.filehub.domain.model.upload.UploadObject;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,7 +31,11 @@ public interface StorageOperations {
     void uploadBase64(UploadBase64Object uploadBase64Object);
 
 
-    OutputStream getOutputStreamFromStorage(String path, String filename, Boolean mkdir) throws IOException;
+    OutputStream getOutputStreamFromStorage(UploadObject uploadObject, String filename, String contentType) throws IOException;
+
+    void writeFileInputStream(TransferFileObject transfer, boolean isMkdir);
+
+    TransferFileObject getTransferFileObject(String path, String filename);
 
     void transfer(FhStorage destination, UploadMultipartObject uploadMultipartObject);
 
