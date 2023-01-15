@@ -34,7 +34,7 @@ import java.util.*;
 public class DropboxStorage extends FhStorage<DropboxProperties> {
 
     private static Map<String, DbxClientV2> dbxClientV2;
-
+    private final static Long LIMIT_150_MB = 157286400L;
 
     public DropboxStorage(String id, DropboxProperties properties) {
         super(id, properties);
@@ -152,19 +152,34 @@ public class DropboxStorage extends FhStorage<DropboxProperties> {
         String path = properties.formatDirPath(uploadMultipartObject.getPath());
         checkIfFolderExists(client, path, uploadMultipartObject.isMkdir());
         for(UploadMultipartObject.FileUploadObject file : uploadMultipartObject.getFiles()) {
-            executeUploadMultipart(client, file.getFile(), path, file.getFilename());
+            if(file.getFile().getSize() < LIMIT_150_MB) {
+                executeUploadMultipart(client, file.getFile(), path, file.getFilename());
+            } else {
+                executeUploadMultipartTranferingBytes(client, file.getFile(), path, file.getFilename());
+            }
         }
     }
 
     private void executeUploadMultipart(DbxClientV2 client, MultipartFile file, String pathDir, String filename) {
-//        ObjectMetadata metadata = new ObjectMetadata();
-//        metadata.setContentType(file.getContentType());
-//        metadata.setContentLength(file.getSize());
         try(InputStream in = file.getInputStream()) {
             String keyfile = pathDir.endsWith("/") ? filename : pathDir + "/" + filename;
             client.files().uploadBuilder(keyfile).uploadAndFinish(in);
         } catch (InvalidAccessTokenException e) {
             throw new StorageException("Invalid or expired token (Dropbox storage)");
+        } catch (IOException | DbxException e) {
+            throw new UploadException("Error to upload the file " + file.getName(), e);
+        }
+    }
+
+    private void executeUploadMultipartTranferingBytes(DbxClientV2 client, MultipartFile file, String pathDir, String filename) {
+        int readByteCount;
+        byte[] buffer = new byte[4096];
+        String keyfile = pathDir.endsWith("/") ? filename : pathDir + "/" + filename;
+        UploadBuilder uploadBuilder = client.files().uploadBuilder(keyfile);
+        try(InputStream in = file.getInputStream(); OutputStream out = uploadBuilder.start().getOutputStream()) {
+            while((readByteCount = in.read(buffer)) != -1) {
+                out.write(buffer, 0, readByteCount);
+            }
         } catch (IOException | DbxException e) {
             throw new UploadException("Error to upload the file " + file.getName(), e);
         }
@@ -214,12 +229,17 @@ public class DropboxStorage extends FhStorage<DropboxProperties> {
 
     @Override
     public void writeFileInputStream(TransferFileObject transfer, boolean isMkdir) {
+        int readByteCount;
+        byte[] buffer = new byte[4096];
         DbxClientV2 client = getClient();
         String path = properties.formatDirPath(transfer.getPath());
         checkIfFolderExists(client, path, isMkdir);
         String keyfile = path.endsWith("/") ? transfer.getFilename() : path + "/" + transfer.getFilename();
-        try(InputStream in = transfer.getInputStream()) {
-            client.files().uploadBuilder(keyfile).uploadAndFinish(in, transfer.getLenght());
+        UploadBuilder uploadBuilder = client.files().uploadBuilder(keyfile);
+        try(InputStream in = transfer.getInputStream(); OutputStream out = uploadBuilder.start().getOutputStream()) {
+            while((readByteCount = in.read(buffer)) != -1) {
+                out.write(buffer, 0, readByteCount);
+            }
         } catch (InvalidAccessTokenException e) {
             throw new StorageException("Invalid or expired token (Dropbox storage)");
         } catch (IOException | DbxException e) {

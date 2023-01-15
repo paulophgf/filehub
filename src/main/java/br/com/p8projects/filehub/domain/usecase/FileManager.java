@@ -15,18 +15,25 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
+import java.util.*;
 
 @Slf4j
 @Service
 public class FileManager {
 
     public void upload(UploadMultipartObject uploadMultipartObject) {
-        log.info("UPLOAD MULTIPLE FILE USING MULTIPART FILE");
-        if(uploadMultipartObject.getSchema().isParallelUpload()) {
-            //uploadParallel(schema, path, files, mkdir);
+        Collection<FhStorage> storages = uploadMultipartObject.getSchema().getStorages();
+        if(uploadMultipartObject.getSchema().hasMiddle()) {
+            log.info("MIDDLE MODE");
+            FhStorage middle = uploadMultipartObject.getSchema().getMiddle();
+            middle.upload(uploadMultipartObject);
+            transferToOtherStorages(uploadMultipartObject, storages, middle);
         } else {
-            uploadSequential(uploadMultipartObject);
+            if(uploadMultipartObject.getSchema().isParallelUpload()) {
+                transferParallel(uploadMultipartObject);
+            } else {
+                storages.forEach(s -> s.upload(uploadMultipartObject));
+            }
         }
     }
 
@@ -108,79 +115,40 @@ public class FileManager {
     }
 
 
-
-    private void uploadSequential(UploadMultipartObject uploadMultipartObject) {
-        log.info("SEQUENTIAL");
-        Collection<FhStorage> storages = uploadMultipartObject.getSchema().getStorages();
-        if(uploadMultipartObject.getSchema().getMiddle() != null) {
-            log.info("MIDDLE MODE");
-            FhStorage middle = uploadMultipartObject.getSchema().getMiddle();
-            middle.upload(uploadMultipartObject);
-            boolean isTemp = !storages.contains(middle);
-            new Thread(() -> {
-                for (FhStorage storage : storages) {
-                    if(!storage.equals(middle)) {
-                        middle.transfer(storage, uploadMultipartObject);
-                    }
-                }
-                if(isTemp) {
-                    log.info("REMOVING FILES FROM TEMPORARY STORAGE");
-                    for(UploadMultipartObject.FileUploadObject uploadObject : uploadMultipartObject.getFiles()) {
-                        String filePath = uploadMultipartObject.getPath();
-                        filePath += filePath.endsWith("/") ? uploadObject.getFilename() : "/" + uploadObject.getFilename();
-                        log.info("Filepath = " + filePath);
-                        middle.delete(filePath);
-                    }
-                }
-            }).start();
-        } else {
+    private void transferToOtherStorages(UploadMultipartObject uploadMultipartObject, Collection<FhStorage> storages, FhStorage middle) {
+        boolean isTemp = !storages.contains(middle);
+        new Thread(() -> {
             for (FhStorage storage : storages) {
-                storage.upload(uploadMultipartObject);
+                if(!storage.equals(middle)) {
+                    middle.transfer(storage, uploadMultipartObject);
+                }
             }
-        }
+            if(isTemp) {
+                log.info("REMOVING FILES FROM TEMPORARY STORAGE");
+                for(UploadMultipartObject.FileUploadObject uploadObject : uploadMultipartObject.getFiles()) {
+                    String filePath = uploadMultipartObject.getPath();
+                    filePath += filePath.endsWith("/") ? uploadObject.getFilename() : "/" + uploadObject.getFilename();
+                    log.info("Filepath = " + filePath);
+                    middle.delete(filePath);
+                }
+            }
+        }).start();
     }
 
-//    private void uploadParallel(Schema schema, String path, MultipartFile[] files, Boolean mkdir) {
-//        log.info("PARALLEL");
-//        for(MultipartFile multipartFile : files) {
-//            int readByteCount;
-//            byte[] buffer = new byte[4096];
-//            List<OutputStream> outputStreamList = openOutputStreamList(schema.getStorages(), path, multipartFile, mkdir);
-//            try(InputStream in = multipartFile.getInputStream()) {
-//                while((readByteCount = in.read(buffer)) != -1) {
-//                    for(OutputStream out : outputStreamList) {
-//                        out.write(buffer, 0, readByteCount);
-//                    }
-//                }
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            } finally {
-//                closeOutputStreamList(outputStreamList);
-//            }
-//        }
-//    }
-
-//    private List<OutputStream> openOutputStreamList(Collection<FhStorage> storages, String path, MultipartFile file, Boolean mkdir) {
-//        List<OutputStream> outputStreamList = new ArrayList<>();
-//        try {
-//            for (FhStorage storage : storages) {
-//                OutputStream outputStream = storage.getOutputStreamFromStorage(path, file.getOriginalFilename(), mkdir);
-//                outputStreamList.add(outputStream);
-//            }
-//        } catch (IOException e) {
-//            throw new UploadException("Error to open the output stream list in parallel mode", e);
-//        }
-//        return outputStreamList;
-//    }
-
-//    private void closeOutputStreamList(List<OutputStream> outputStreamList) {
-//        for(OutputStream out : outputStreamList) {
-//            try {
-//                out.close();
-//            } catch (IOException e) {
-//                throw new UploadException("Error to close the output stream list in parallel mode", e);
-//            }
-//        }
-//    }
+    private void transferParallel(UploadMultipartObject uploadMultipartObject) {
+        log.info("UPLOAD PARALLEL");
+        Set<Thread> threadList = new HashSet<>();
+        for(FhStorage storage : uploadMultipartObject.getSchema().getStorages()) {
+            threadList.add(new Thread(() -> storage.upload(uploadMultipartObject)));
+        }
+        threadList.forEach(t -> t.start());
+        threadList.forEach(t -> {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
 
 }

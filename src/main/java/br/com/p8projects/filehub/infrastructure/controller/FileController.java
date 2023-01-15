@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Date;
 
 @Api(value = "File Operations")
 @RestController
@@ -54,10 +55,13 @@ public class FileController {
                                         @ApiParam(value = "TRUE: Will create the directory path before upload the file.\n" +
                                                "FALSE: Can do an error if the directory path does not exists", defaultValue = "false")
                                         @RequestParam(value = "mkdir", required = false, defaultValue = "false") Boolean mkdir) {
+        Date start = new Date();
         Schema schema = StorageResourceReader.getSchema(schemaId);
         UploadMultipartObject uploadMultipartObject = new UploadMultipartObject(schema, path, files, filenames, mkdir);
         triggerAuthenticationService.checkUploadOperation(request, uploadMultipartObject);
         fileManager.upload(uploadMultipartObject);
+        Date end = new Date();
+        System.out.println("Duration: " + (end.getTime() - start.getTime()));
         return ResponseEntity.ok().build();
     }
 
