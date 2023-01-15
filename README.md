@@ -210,9 +210,11 @@ configuration properties the storage has. The storage types are listed next:
         <td colspan="1">
             <div>It creates a link with a dropbox account</div>
             <div><b>Type:</b> DROPBOX</div>
-            <div><b>Limitations:</b> 
-                The refresh token operation was not implemented. 
-                It is necessary to generate a new token when you use this kind of storage
+            <div><b>Limitations:</b>
+                <li><b>Access Token:</b> The refresh token operation was not implemented. 
+                It is necessary to generate a new token when you use this kind of storage</li>
+                <li><b>File Size:</b> The maximum file size is 150 Mb. 
+                Operations with big files will not work.</li>
             </div>
         </td>
       </tr>

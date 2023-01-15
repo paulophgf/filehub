@@ -56,6 +56,10 @@ public class Schema {
         return trigger != null;
     }
 
+    public boolean hasMiddle() {
+        return middle != null;
+    }
+
     public void checkIfIsAllowedDirectoryOperations() {
         if(hasTrigger() && !trigger.isAllowDirOperations()) {
             throw new NotFoundException();

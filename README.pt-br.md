@@ -220,6 +220,12 @@ as propriedades de configuração o storage possui. Os tipos de storages são li
                A operação de atualização do token não foi implementada.
                É necessário gerar um token toda vez que for utilizar esse tipo de storage.
             </div>
+            <div><b>Limitação da Integração:</b>
+                <li><b>Access Token:</b> A operação de atualização do token não foi implementada.
+                É necessário gerar um token toda vez que for utilizar esse tipo de storage.</li>
+                <li><b>Tamanho dos arquivosFile Size:</b> O tamanho máximo do arquivo é de 150 Mb. 
+                Operações com arquivos maiores são irão funcionar.</li>
+            </div>
         </td>
       </tr>
       <tr style="background-color: white; color: black">
