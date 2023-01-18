@@ -145,7 +145,7 @@ public class XLMPropertiesReaderData {
         return new StorageResource(storages, new HashMap<>(), schemas);
     }
 
-    public StorageResource createSchemasModelWithTrigger(boolean blockDirOperations) {
+    public StorageResource createSchemasModelWithTrigger(boolean allowDirOperations) {
         S3Properties s3Properties = createS3Properties();
         FileSystemProperties fsProperties = createFsProperties();
 
@@ -164,7 +164,7 @@ public class XLMPropertiesReaderData {
         Schema s3AndFsSchema = new Schema("S3-And-FileSystem", null, null, s3Andfs, false, false);
 
         Trigger trigger = createTrigger("myTrigger");
-        trigger.setAllowDirOperations(blockDirOperations);
+        trigger.setAllowDirOperations(allowDirOperations);
         s3AndFsSchema.setTrigger(trigger);
         Map<String, Trigger> triggers = new LinkedHashMap<>();
         triggers.put("myTrigger", trigger);
@@ -255,6 +255,7 @@ public class XLMPropertiesReaderData {
         trigger.setUrl("http://localhost:9002/auth");
         trigger.setHeader("Authorization");
         trigger.setHttpMethod(EnumHttpMethod.GET);
+        trigger.setAllowDirOperations(true);
         return trigger;
     }
 
