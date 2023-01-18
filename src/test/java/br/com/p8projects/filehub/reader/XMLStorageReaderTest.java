@@ -86,7 +86,7 @@ class XMLStorageReaderTest {
     @Test
     @DisplayName("Read Properties XML File: Schema with trigger (success)")
     void successReadSchemaWithTrigger() {
-        StorageResource model = data.createSchemasModelWithTrigger(false);
+        StorageResource model = data.createSchemasModelWithTrigger(true);
         String xmlContent = data.getPropertiesFromXMLFile(XLMPropertiesReaderData.XML_FILE_SUCCESS_WITH_TRIGGER);
         StorageResource schemas = XMLStorageReader.read(xmlContent);
         assertEquals(schemas, model);

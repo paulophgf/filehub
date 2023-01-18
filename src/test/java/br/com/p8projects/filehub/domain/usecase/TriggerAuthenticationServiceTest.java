@@ -44,7 +44,7 @@ class TriggerAuthenticationServiceTest {
 
     @Test
     void getFileLocation() {
-        StorageResource resource = data.createSchemasModelWithTrigger(false);
+        StorageResource resource = data.createSchemasModelWithTrigger(true);
         Schema schema = resource.getSchemas().get("S3-And-FileSystem");
         FileLocation model = new FileLocation(schema, "/account/user");
         TriggerRequestBody triggerRequestBody = new TriggerRequestBody(model, EnumFileHubOperation.CREATE_DIRECTORY);
@@ -57,7 +57,7 @@ class TriggerAuthenticationServiceTest {
 
     @Test
     void getFileLocationIsRead() {
-        StorageResource resource = data.createSchemasModelWithTrigger(false);
+        StorageResource resource = data.createSchemasModelWithTrigger(true);
         Schema schema = resource.getSchemas().get("S3-And-FileSystem");
         FileLocation model = new FileLocation(schema,"/account/user");
         MockHttpServletRequest mockedRequest = new MockHttpServletRequest();
@@ -67,7 +67,7 @@ class TriggerAuthenticationServiceTest {
 
     @Test
     void getFileLocationWithParameters() {
-        StorageResource resource = data.createSchemasModelWithTrigger(false);
+        StorageResource resource = data.createSchemasModelWithTrigger(true);
         Schema schema = resource.getSchemas().get("S3-And-FileSystem");
         FileLocation model = new FileLocation(schema,"/account/$account/user/$user");
         TriggerRequestBody triggerRequestBody = new TriggerRequestBody(model, EnumFileHubOperation.CREATE_DIRECTORY);
@@ -83,7 +83,7 @@ class TriggerAuthenticationServiceTest {
 
     @Test
     void getFileLocationHeaderNotFound() {
-        StorageResource resource = data.createSchemasModelWithTrigger(false);
+        StorageResource resource = data.createSchemasModelWithTrigger(true);
         Schema schema = resource.getSchemas().get("S3-And-FileSystem");
         FileLocation model = new FileLocation(schema,"/account/user");
         MockHttpServletRequest mockedRequest = new MockHttpServletRequest();
