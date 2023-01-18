@@ -1,5 +1,6 @@
 package br.com.p8projects.filehub.infrastructure.controller;
 
+import br.com.p8projects.filehub.domain.model.EnumFileHubOperation;
 import br.com.p8projects.filehub.domain.model.FileItem;
 import br.com.p8projects.filehub.domain.model.FileLocation;
 import br.com.p8projects.filehub.domain.model.config.Schema;
@@ -47,7 +48,8 @@ public class DirectoryController {
                                                    @RequestParam("path") String path) {
         Schema schema = StorageResourceReader.getSchema(schemaId);
         schema.checkIfIsAllowedDirectoryOperations();
-        FileLocation fileLocation = triggerAuthenticationService.getFileLocation(request, schema, path, false);
+        FileLocation fileLocation = new FileLocation(schema, path);
+        triggerAuthenticationService.checkFileLocation(request, fileLocation, EnumFileHubOperation.CREATE_DIRECTORY);
         Boolean result = directoryManager.createDirectory(schema, fileLocation.getPath());
         return ResponseEntity.ok(result);
     }
@@ -73,7 +75,8 @@ public class DirectoryController {
                                           @RequestParam("name") String name) {
         Schema schema = StorageResourceReader.getSchema(schemaId);
         schema.checkIfIsAllowedDirectoryOperations();
-        FileLocation fileLocation = triggerAuthenticationService.getFileLocation(request, schema, path, false);
+        FileLocation fileLocation = new FileLocation(schema, path, name);
+        triggerAuthenticationService.checkFileLocation(request, fileLocation, EnumFileHubOperation.RENAME_DIRECTORY);
         boolean result = directoryManager.renameDirectory(schema, fileLocation.getPath(), name);
         return ResponseEntity.ok(result);
     }
@@ -99,7 +102,8 @@ public class DirectoryController {
                                           @RequestParam(value = "recursively", required = false, defaultValue = "false") Boolean recursively) {
         Schema schema = StorageResourceReader.getSchema(schemaId);
         schema.checkIfIsAllowedDirectoryOperations();
-        FileLocation fileLocation = triggerAuthenticationService.getFileLocation(request, schema, path, false);
+        FileLocation fileLocation = new FileLocation(schema, path);
+        triggerAuthenticationService.checkFileLocation(request, fileLocation, EnumFileHubOperation.DELETE_DIRECTORY);
         Boolean result = directoryManager.deleteDirectory(schema, fileLocation.getPath(), recursively);
         return ResponseEntity.ok(result);
     }
@@ -121,7 +125,8 @@ public class DirectoryController {
                                                     @RequestParam("path") String path) {
         Schema schema = StorageResourceReader.getSchema(schemaId);
         schema.checkIfIsAllowedDirectoryOperations();
-        FileLocation fileLocation = triggerAuthenticationService.getFileLocation(request, schema, path, true);
+        FileLocation fileLocation = new FileLocation(schema, path);
+        triggerAuthenticationService.checkFileLocation(request, fileLocation, EnumFileHubOperation.LIST_FILES);
         List<FileItem> result = directoryManager.listFiles(schema, fileLocation.getPath());
         return ResponseEntity.ok(result);
     }
@@ -144,7 +149,8 @@ public class DirectoryController {
                                  @RequestParam("path") String path) {
         Schema schema = StorageResourceReader.getSchema(schemaId);
         schema.checkIfIsAllowedDirectoryOperations();
-        FileLocation fileLocation = triggerAuthenticationService.getFileLocation(request, schema, path, false);
+        FileLocation fileLocation = new FileLocation(schema, path);
+        triggerAuthenticationService.checkFileLocation(request, fileLocation, EnumFileHubOperation.EXIST_DIRECTORY);
         boolean existsDirectory = directoryManager.existsDirectory(schema, fileLocation.getPath());
         return existsDirectory ? ResponseEntity.ok(true) : ResponseEntity.status(HttpStatus.NOT_FOUND).body(false);
     }

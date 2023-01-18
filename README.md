@@ -350,7 +350,7 @@ When a trigger is configured it is necessary to inform three properties:
    is to check if the header value is valid. If the response of that request does not return a 200 (OK)
    code, the operation will be canceled.
 3.  **http-method (optional):** define which HTTP method type will be used on the request (GET, HEAD, POST, PUT,
-    PATCH, DELETE, OPTIONS). The default value is GET.
+    PATCH, DELETE, OPTIONS). The default value is **GET**.
 
 <br>
 
@@ -402,6 +402,24 @@ The flowchart below shows the process considering the upload operation to the pr
 The application that uses the FileHub service should send the trigger configured header with a value. When the 
 FileHub receives the request, it will call the trigger configured endpoint, transferring the header to the authorization 
 service to check the validation. A JWT token is a good example of using that process.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+When a trigger do a request to the configured URL, it sends the following request body:
+- **schema:** the selected schema name
+- **operation:** the operation type executed (CREATE_DIRECTORY, RENAME_DIRECTORY, DELETE_DIRECTORY, LIST_FILES, EXIST_DIRECTORY, UPLOAD_MULTIPART_FILE, UPLOAD_BASE64_FILE, DOWNLOAD_FILE, DELETE_FILE, EXIST_FILE, GET_FILE_DETAILS)
+- **path:** the path informed
+- **filenames:** a list with file names used on the request (usually for upload operations)
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+The following JSON shows a request body example:
+````json
+{
+  "schema": "test",
+  "operation": "UPLOAD_MULTIPART_FILE",
+  "path": "/accounts/users/avatar/",
+  "filenames": [ "MyAvatar.jpeg" ]
+}
+````
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Another purpose of the triggers is to allow the creation of customized paths for the files. To explain that, imagine a 

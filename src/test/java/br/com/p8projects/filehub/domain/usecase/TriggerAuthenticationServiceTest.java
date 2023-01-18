@@ -1,7 +1,9 @@
 package br.com.p8projects.filehub.domain.usecase;
 
 import br.com.p8projects.filehub.domain.exceptions.TriggerAuthenticationException;
+import br.com.p8projects.filehub.domain.model.EnumFileHubOperation;
 import br.com.p8projects.filehub.domain.model.FileLocation;
+import br.com.p8projects.filehub.domain.model.TriggerRequestBody;
 import br.com.p8projects.filehub.domain.model.config.Schema;
 import br.com.p8projects.filehub.domain.model.config.StorageResource;
 import br.com.p8projects.filehub.reader.XLMPropertiesReaderData;
@@ -44,46 +46,49 @@ class TriggerAuthenticationServiceTest {
     void getFileLocation() {
         StorageResource resource = data.createSchemasModelWithTrigger(false);
         Schema schema = resource.getSchemas().get("S3-And-FileSystem");
-        FileLocation model = new FileLocation("/account/user");
+        FileLocation model = new FileLocation(schema, "/account/user");
+        TriggerRequestBody triggerRequestBody = new TriggerRequestBody(model, EnumFileHubOperation.CREATE_DIRECTORY);
         MockHttpServletRequest mockedRequest = new MockHttpServletRequest();
         mockedRequest.addHeader("Authorization", "token-example");
-        when(triggerCalling.sendRequest(schema.getTrigger(), "token-example")).thenReturn(new HashMap<>());
-        FileLocation result = triggerAuthenticationService.getFileLocation(mockedRequest, schema, "/account/user", false);
-        assertEquals(model, result);
+        when(triggerCalling.sendRequest(schema.getTrigger(), "token-example", triggerRequestBody)).thenReturn(new HashMap<>());
+        triggerAuthenticationService.checkFileLocation(mockedRequest, model, EnumFileHubOperation.CREATE_DIRECTORY);
+        assertEquals("/account/user", model.getPath());
     }
 
     @Test
     void getFileLocationIsRead() {
         StorageResource resource = data.createSchemasModelWithTrigger(false);
         Schema schema = resource.getSchemas().get("S3-And-FileSystem");
-        FileLocation model = new FileLocation("/account/user");
+        FileLocation model = new FileLocation(schema,"/account/user");
         MockHttpServletRequest mockedRequest = new MockHttpServletRequest();
-        FileLocation result = triggerAuthenticationService.getFileLocation(mockedRequest, schema, "/account/user", true);
-        assertEquals(model, result);
+        triggerAuthenticationService.checkFileLocation(mockedRequest, model, EnumFileHubOperation.EXIST_DIRECTORY);
+        assertEquals("/account/user", model.getPath());
     }
 
     @Test
     void getFileLocationWithParameters() {
         StorageResource resource = data.createSchemasModelWithTrigger(false);
         Schema schema = resource.getSchemas().get("S3-And-FileSystem");
-        FileLocation model = new FileLocation("/account/5/user/123");
+        FileLocation model = new FileLocation(schema,"/account/$account/user/$user");
+        TriggerRequestBody triggerRequestBody = new TriggerRequestBody(model, EnumFileHubOperation.CREATE_DIRECTORY);
         MockHttpServletRequest mockedRequest = new MockHttpServletRequest();
         mockedRequest.addHeader("Authorization", "token-example");
         HashMap<String, String> parameters = new HashMap<>();
         parameters.put("account", "5");
         parameters.put("user", "123");
-        when(triggerCalling.sendRequest(schema.getTrigger(), "token-example")).thenReturn(parameters);
-        FileLocation result = triggerAuthenticationService.getFileLocation(mockedRequest, schema, "/account/$account/user/$user", false);
-        assertEquals(model, result);
+        when(triggerCalling.sendRequest(schema.getTrigger(), "token-example", triggerRequestBody)).thenReturn(parameters);
+        triggerAuthenticationService.checkFileLocation(mockedRequest, model, EnumFileHubOperation.CREATE_DIRECTORY);
+        assertEquals("/account/5/user/123", model.getPath());
     }
 
     @Test
     void getFileLocationHeaderNotFound() {
         StorageResource resource = data.createSchemasModelWithTrigger(false);
         Schema schema = resource.getSchemas().get("S3-And-FileSystem");
+        FileLocation model = new FileLocation(schema,"/account/user");
         MockHttpServletRequest mockedRequest = new MockHttpServletRequest();
         Throwable exception = assertThrows(TriggerAuthenticationException.class,
-                () -> triggerAuthenticationService.getFileLocation(mockedRequest, schema, "/account/user", false)
+                () -> triggerAuthenticationService.checkFileLocation(mockedRequest, model, EnumFileHubOperation.CREATE_DIRECTORY)
         );
         String expectedMessage = "Header Authorization was not found in the request";
         assertEquals(expectedMessage, exception.getMessage());

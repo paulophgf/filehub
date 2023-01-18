@@ -163,8 +163,8 @@ public class XMLStorageReader {
             if(!actionAttribute.isEmpty()) {
                 triggerAction = EnumTriggerAction.get(actionAttribute);
             }
-            boolean isTriggerDefault = checkBooleanElement(triggerId, triggerElement, "trigger", "default");
-            boolean allowDirOperations = checkBooleanElement(triggerId, triggerElement, "trigger", "no-dir");
+            boolean isTriggerDefault = checkBooleanElement(triggerId, triggerElement, "trigger", "default", false);
+            boolean allowDirOperations = checkBooleanElement(triggerId, triggerElement, "trigger", "no-dir", true);
             Trigger trigger = getPropertiesFromTriggerNode(triggerId, triggerAction, triggerElement);
             trigger.setAllowDirOperations(allowDirOperations);
             triggers.put(triggerId, trigger);
@@ -250,8 +250,8 @@ public class XMLStorageReader {
                 throw new PropertiesReaderException("The " + schemaName + " schema is empty");
             }
             Trigger schemaTrigger = getTriggerFromSchema(schemaElement, triggers);
-            boolean isEnabledCache = checkBooleanElement(schemaName, schemaElement, "schema", "cache");
-            boolean isParallelUpload = checkBooleanElement(schemaName, schemaElement, "schema", "parallel-upload");
+            boolean isEnabledCache = checkBooleanElement(schemaName, schemaElement, "schema", "cache", false);
+            boolean isParallelUpload = checkBooleanElement(schemaName, schemaElement, "schema", "parallel-upload", false);
             LinkedList<FhStorage> storageList = getStoragesFromSchema(schemaElement, storages);
             FhStorage middleStorage = getMiddleStorage(schemaElement, storages);
             schemas.put(schemaName, new Schema(schemaName, schemaTrigger, middleStorage, storageList, isEnabledCache, isParallelUpload));
@@ -343,16 +343,16 @@ public class XMLStorageReader {
         }
     }
 
-    private boolean checkBooleanElement(String elementName, Element element, String typeElement, String attributeName) {
-        boolean isCache = false;
+    private boolean checkBooleanElement(String elementName, Element element, String typeElement, String attributeName, boolean defaultValue) {
+        boolean isTrueAttrivuteValue = defaultValue;
         if(element.hasAttribute(attributeName)) {
             String value = element.getAttribute(attributeName).toLowerCase().trim();
             if(!value.equals("true") && !value.equals("false")) {
                 throw new PropertiesReaderException("Invalid value to " + attributeName + " attribute in " + typeElement + " element: " + elementName);
             }
-            isCache = "true".equals(value);
+            isTrueAttrivuteValue = "true".equals(value);
         }
-        return isCache;
+        return isTrueAttrivuteValue;
     }
 
 }

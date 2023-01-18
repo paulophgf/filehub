@@ -1,7 +1,9 @@
 package br.com.p8projects.filehub.infrastructure.controller;
 
 import br.com.p8projects.filehub.domain.exceptions.NotFoundException;
-import br.com.p8projects.filehub.domain.model.*;
+import br.com.p8projects.filehub.domain.model.EnumFileHubOperation;
+import br.com.p8projects.filehub.domain.model.FileLocation;
+import br.com.p8projects.filehub.domain.model.FileMetadata;
 import br.com.p8projects.filehub.domain.model.config.Schema;
 import br.com.p8projects.filehub.domain.model.upload.Base64Upload;
 import br.com.p8projects.filehub.domain.model.upload.UploadBase64Object;
@@ -18,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Date;
 
 @Api(value = "File Operations")
 @RestController
@@ -55,13 +56,10 @@ public class FileController {
                                         @ApiParam(value = "TRUE: Will create the directory path before upload the file.\n" +
                                                "FALSE: Can do an error if the directory path does not exists", defaultValue = "false")
                                         @RequestParam(value = "mkdir", required = false, defaultValue = "false") Boolean mkdir) {
-        Date start = new Date();
         Schema schema = StorageResourceReader.getSchema(schemaId);
         UploadMultipartObject uploadMultipartObject = new UploadMultipartObject(schema, path, files, filenames, mkdir);
-        triggerAuthenticationService.checkUploadOperation(request, uploadMultipartObject);
+        triggerAuthenticationService.checkUploadOperation(request, uploadMultipartObject, EnumFileHubOperation.UPLOAD_MULTIPART_FILE);
         fileManager.upload(uploadMultipartObject);
-        Date end = new Date();
-        System.out.println("Duration: " + (end.getTime() - start.getTime()));
         return ResponseEntity.ok().build();
     }
 
@@ -86,7 +84,7 @@ public class FileController {
                                 @RequestParam(value = "mkdir", required = false, defaultValue = "false") Boolean mkdir) {
         Schema schema = StorageResourceReader.getSchema(schemaId);
         UploadBase64Object uploadBase64Object = new UploadBase64Object(schema, path, files, mkdir);
-        triggerAuthenticationService.checkUploadOperation(request, uploadBase64Object);
+        triggerAuthenticationService.checkUploadOperation(request, uploadBase64Object, EnumFileHubOperation.UPLOAD_BASE64_FILE);
         fileManager.uploadBase64(uploadBase64Object);
         return ResponseEntity.ok().build();
     }
@@ -108,7 +106,8 @@ public class FileController {
                          HttpServletRequest request, HttpServletResponse response) throws IOException {
         Schema schema = StorageResourceReader.getSchema(schemaId);
         String originalPath = request.getRequestURI().replace("/schema/" + schemaId + "/file/", "/");
-        FileLocation fileLocation = triggerAuthenticationService.getFileLocation(request, schema, originalPath, true);
+        FileLocation fileLocation = new FileLocation(schema, originalPath);
+        triggerAuthenticationService.checkFileLocation(request, fileLocation, EnumFileHubOperation.DOWNLOAD_FILE);
         if(!fileManager.existsFile(schema, fileLocation.getPath())) {
             throw new NotFoundException("Not found: " + fileLocation.getPath());
         }
@@ -135,7 +134,8 @@ public class FileController {
                                           @ApiParam(value = "File path separated by slash character \" / \"", required = true)
                                           @RequestParam("path") String path) {
         Schema schema = StorageResourceReader.getSchema(schemaId);
-        FileLocation fileLocation = triggerAuthenticationService.getFileLocation(request, schema, path, false);
+        FileLocation fileLocation = new FileLocation(schema, path);
+        triggerAuthenticationService.checkFileLocation(request, fileLocation, EnumFileHubOperation.DELETE_FILE);
         fileManager.delete(schema, fileLocation.getPath());
         return ResponseEntity.ok(true);
     }
@@ -155,7 +155,8 @@ public class FileController {
                                  @ApiParam(value = "File path separated by slash character \" / \"", required = true)
                                  @RequestParam("path") String path) {
         Schema schema = StorageResourceReader.getSchema(schemaId);
-        FileLocation fileLocation = triggerAuthenticationService.getFileLocation(request, schema, path, true);
+        FileLocation fileLocation = new FileLocation(schema, path);
+        triggerAuthenticationService.checkFileLocation(request, fileLocation, EnumFileHubOperation.EXIST_FILE);
         return fileManager.existsFile(schema, fileLocation.getPath()) ? ResponseEntity.ok(true) : ResponseEntity.notFound().build();
     }
 
@@ -174,7 +175,8 @@ public class FileController {
                                  @ApiParam(value = "File path separated by slash character \" / \"", required = true)
                                  @RequestParam("path") String path) {
         Schema schema = StorageResourceReader.getSchema(schemaId);
-        FileLocation fileLocation = triggerAuthenticationService.getFileLocation(request, schema, path, false);
+        FileLocation fileLocation = new FileLocation(schema, path);
+        triggerAuthenticationService.checkFileLocation(request, fileLocation, EnumFileHubOperation.DOWNLOAD_FILE);
         FileMetadata fileMetadata = fileManager.getDetails(schema, fileLocation.getPath());
         return ResponseEntity.ok(fileMetadata);
     }

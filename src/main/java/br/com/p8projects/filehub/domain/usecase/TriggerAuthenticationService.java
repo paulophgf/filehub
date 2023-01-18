@@ -1,11 +1,12 @@
 package br.com.p8projects.filehub.domain.usecase;
 
 import br.com.p8projects.filehub.domain.exceptions.TriggerAuthenticationException;
+import br.com.p8projects.filehub.domain.model.EnumFileHubOperation;
 import br.com.p8projects.filehub.domain.model.FileLocation;
-import br.com.p8projects.filehub.domain.model.upload.UploadObject;
-import br.com.p8projects.filehub.domain.model.config.Schema;
+import br.com.p8projects.filehub.domain.model.TriggerRequestBody;
 import br.com.p8projects.filehub.domain.model.config.Trigger;
 import br.com.p8projects.filehub.domain.model.storage.EnumTriggerAction;
+import br.com.p8projects.filehub.domain.model.upload.UploadObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +27,7 @@ public class TriggerAuthenticationService {
     }
 
 
-    public void checkUploadOperation(HttpServletRequest request, UploadObject uploadObject) {
+    public void checkUploadOperation(HttpServletRequest request, UploadObject uploadObject, EnumFileHubOperation fileHubOperation) {
         Trigger trigger = uploadObject.getSchema().getTrigger();
         if(trigger != null) {
             String headerName = trigger.getHeader();
@@ -39,7 +40,8 @@ public class TriggerAuthenticationService {
                 if (headerValue == null) {
                     throw new TriggerAuthenticationException("Header " + headerName + " was not found in the request");
                 }
-                HashMap<String, String> parameters = triggerCalling.sendRequest(trigger, headerValue);
+                TriggerRequestBody triggerRequestBody = new TriggerRequestBody(uploadObject, fileHubOperation);
+                HashMap<String, String> parameters = triggerCalling.sendRequest(trigger, headerValue, triggerRequestBody);
                 if(!parameters.isEmpty()) {
                     String newPath = getPathWithReplacedParameters(uploadObject.getPath(), parameters);
                     uploadObject.setPath(newPath);
@@ -50,26 +52,28 @@ public class TriggerAuthenticationService {
         }
     }
 
-    public FileLocation getFileLocation(HttpServletRequest request, Schema schema, String path, Boolean isRead) {
-        FileLocation fileLocation = new FileLocation(path);
-        if(schema.getTrigger() != null) {
-            String headerValue = request.getHeader(schema.getTrigger().getHeader());
-            if(schema.getTrigger().getAction().equals(EnumTriggerAction.ALL) || headerValue != null ||
-                    (schema.getTrigger().getAction().equals(EnumTriggerAction.UPDATE) && !isRead)) {
+    public void checkFileLocation(HttpServletRequest request, FileLocation fileLocation, EnumFileHubOperation fileHubOperation) {
+        Trigger trigger = fileLocation.getSchema().getTrigger();
+        if(trigger != null) {
+            String headerValue = request.getHeader(trigger.getHeader());
+            if(trigger.getAction().equals(EnumTriggerAction.ALL) || headerValue != null ||
+                    (trigger.getAction().equals(EnumTriggerAction.UPDATE) && !fileHubOperation.isReadOperation())) {
                 if (headerValue == null) {
-                    throw new TriggerAuthenticationException("Header " + schema.getTrigger().getHeader() + " was not found in the request");
+                    throw new TriggerAuthenticationException("Header " + trigger.getHeader() + " was not found in the request");
                 }
-                HashMap<String, String> parameters = triggerCalling.sendRequest(schema.getTrigger(), headerValue);
+                TriggerRequestBody triggerRequestBody = new TriggerRequestBody(fileLocation, fileHubOperation);
+                HashMap<String, String> parameters = triggerCalling.sendRequest(trigger, headerValue, triggerRequestBody);
                 if(!parameters.isEmpty()) {
-                    String newPath = getPathWithReplacedParameters(path, parameters);
+                    String newPath = getPathWithReplacedParameters(fileLocation.getPath(), parameters);
                     fileLocation.setPath(newPath);
                     String filename = parameters.get("filename");
                     fileLocation.setFilename(filename);
                 }
             }
         }
-        return fileLocation;
     }
+
+
 
     private String getPathWithReplacedParameters(String path, HashMap<String, String> parameters) {
         Set<String> parameterNames = parameters.keySet();

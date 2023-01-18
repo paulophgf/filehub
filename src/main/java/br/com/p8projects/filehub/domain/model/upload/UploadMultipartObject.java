@@ -37,6 +37,11 @@ public class UploadMultipartObject extends UploadObject {
         }
     }
 
+    @Override
+    public List<String> listFilenames() {
+        return files.stream().map(FileUploadObject::getFilename).toList();
+    }
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor

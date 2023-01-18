@@ -363,7 +363,7 @@ Ao configurar uma trigger três propriedades deverão ser informadas:
 se o valor do header é válido. Caso a requisição enviada para este endpoint retornar um código HTTP diferente 
 de 200 (OK) a operação é cancelada.
 3. **http-method (optional):** define qual o tipo do método HTTP utilizado na requisição (GET, HEAD, POST, PUT, 
-PATCH, DELETE, OPTIONS). O valor padrão é GET.
+PATCH, DELETE, OPTIONS). O valor padrão é **GET**.
 
 <br>
 
@@ -417,6 +417,24 @@ O fluxograma abaixo apresenta o processo considerando a operação de **upload**
 A aplicação que consome o serviço FileHub deverá enviar o header configurado na trigger com um valor, ao receber 
 a requisição, o FileHub irá chamar o endpoint configurado na trigger repassando o header para que o serviço de 
 autorização faça a devida validação. Um token JWT é um bom exemplo do uso desse processo.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Quando uma trigger realiza uma request para a URL configurada, ela enviará as seguintes informações no corpo da requisição (*request body*):
+- **schema:** o nome do schema selecionado na operação
+- **operation:** o tipo de operação está sendo executada (CREATE_DIRECTORY, RENAME_DIRECTORY, DELETE_DIRECTORY, LIST_FILES, EXIST_DIRECTORY, UPLOAD_MULTIPART_FILE, UPLOAD_BASE64_FILE, DOWNLOAD_FILE, DELETE_FILE, EXIST_FILE, GET_FILE_DETAILS)
+- **path:** o caminho informado
+- **filenames:** uma lista com os nomes dos arquivos que estão sendo manipulados na operação
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+O seguinte JSON mostra um exemplo desse *request body*:
+````json
+{
+        "schema": "test", 
+        "operation": "UPLOAD_MULTIPART_FILE", 
+        "path": "/accounts/users/avatar/", 
+        "filenames": [ "MyAvatar.jpeg" ]
+}
+````
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Outra função das triggers é permitir a criação de caminhos customizáveis para os arquivos. Para deixar mais 
