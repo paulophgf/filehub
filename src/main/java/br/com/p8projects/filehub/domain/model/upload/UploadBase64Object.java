@@ -25,4 +25,9 @@ public class UploadBase64Object extends UploadObject {
         }
     }
 
+    @Override
+    public List<String> listFilenames() {
+        return files.stream().map(Base64Upload::getFilename).toList();
+    }
+
 }

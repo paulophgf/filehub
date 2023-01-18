@@ -2,6 +2,7 @@ package br.com.p8projects.filehub.domain.usecase;
 
 import br.com.p8projects.filehub.domain.exceptions.PropertiesReaderException;
 import br.com.p8projects.filehub.domain.exceptions.TriggerAuthenticationException;
+import br.com.p8projects.filehub.domain.model.TriggerRequestBody;
 import br.com.p8projects.filehub.domain.model.config.Trigger;
 import com.google.gson.Gson;
 import org.springframework.stereotype.Service;
@@ -19,16 +20,18 @@ import java.util.HashMap;
 @Service
 public class TriggerCalling {
 
-    private static Gson gson = new Gson();
+    private static final Gson gson = new Gson();
     private static final int REQUEST_TIMEOUT_SECONDS = 5;
 
-    public HashMap<String, String> sendRequest(Trigger trigger, String headerValue) {
+    public HashMap<String, String> sendRequest(Trigger trigger, String headerValue, TriggerRequestBody triggerRequestBody) {
         HashMap<String, String> response;
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(new URI(trigger.getUrl()))
                     .timeout(Duration.of(REQUEST_TIMEOUT_SECONDS, ChronoUnit.SECONDS))
-                    .header(trigger.getHeader(), headerValue).method(trigger.getHttpMethod().name(), HttpRequest.BodyPublishers.noBody())
+                    .header(trigger.getHeader(), headerValue)
+                    .header("Content-Type", "application/json")
+                    .method(trigger.getHttpMethod().name(), HttpRequest.BodyPublishers.ofString(triggerRequestBody.getBody()))
                     .build();
 
             HttpResponse<String> responseObject = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
@@ -41,7 +44,7 @@ public class TriggerCalling {
             }
         } catch (URISyntaxException | IOException | InterruptedException e) {
             e.printStackTrace();
-            throw new PropertiesReaderException("Error to get file from github");
+            throw new PropertiesReaderException("Error to check trigger service");
         }
         return response;
     }
