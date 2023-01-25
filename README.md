@@ -700,16 +700,15 @@ services:
       - "8088:8088"
     volumes:
       - /etc/hosts:/etc/hosts:ro
-      - {LOCAL_DIR}:/filehub # Replace the variable {LOCAL_DIR}
+      - {LOCAL_DIR}:/filehub # Replace the variable {LOCAL_DIR} | e.g. Win: C:\Users\%user%\filehub or Linux: /filehub
     environment:
-      CONFIG_TYPE: "[LOCAL_FILE | GIT_FILE]" # Choose one option
-      LOCAL_FILE_PATH: "{LOCAL_DIR_PATH}" # Replace the variable {LOCAL_DIR_PATH}
-      CONFIG_GIT_FILE_PATH: "{GIT_FILE_URL}" # Replace the variable {GIT_FILE_URL}
-      CONFIG_GIT_FILE_TOKEN: "{GIT_FILE_TOKEN}" # Replace the variable {GIT_FILE_TOKEN}
+      CONFIG_TYPE: "LOCAL_FILE" # Choose one option LOCAL_FILE or GIT_FILE
+      LOCAL_FILE_PATH: "filehub/fh-config.xml"
+      CONFIG_GIT_FILE_PATH: "" # Fill the variable if you choose GIT_FILE as CONFIG_TYPE
+      CONFIG_GIT_FILE_TOKEN: "" # Fill the variable if you choose GIT_FILE as CONFIG_TYPE
       JAVA_OPTS : "-Xms512m -Xmx1024m"
 
 networks:
   filehub-default:
-    external:
-      name: filehub-default
+    name: filehub-default
 ````
