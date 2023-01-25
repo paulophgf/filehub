@@ -1,8 +1,8 @@
 package br.com.p8projects.filehub.domain.usecase;
 
 import br.com.p8projects.filehub.domain.interfaces.SynchronizationProgressControl;
+import br.com.p8projects.filehub.domain.model.StorageSynchronize;
 import br.com.p8projects.filehub.domain.model.config.Schema;
-import br.com.p8projects.filehub.domain.model.config.FhStorage;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -24,9 +24,9 @@ public class SynchronizationProgressLocal implements SynchronizationProgressCont
     }
 
     @Override
-    public UUID start(FhStorage right, FhStorage left) {
+    public UUID start(StorageSynchronize storageSynchronize) {
         UUID key = UUID.randomUUID();
-        synchControl.add(right.getId() + left.getId());
+        synchControl.add(storageSynchronize.getSource().getId() + storageSynchronize.getDestination().getId());
         percentageControl.put(key, 0f);
         return key;
     }
@@ -38,9 +38,9 @@ public class SynchronizationProgressLocal implements SynchronizationProgressCont
     }
 
     @Override
-    public boolean exists(FhStorage right, FhStorage left) {
-        String key1 = right.getId() + left.getId();
-        String key2 = left.getId() + right.getId();
+    public boolean exists(StorageSynchronize storageSynchronize) {
+        String key1 = storageSynchronize.getSource().getId() + storageSynchronize.getDestination().getId();
+        String key2 = storageSynchronize.getDestination().getId() + storageSynchronize.getSource().getId();
         return synchControl.contains(key1) || synchControl.contains(key2);
     }
 
@@ -56,10 +56,12 @@ public class SynchronizationProgressLocal implements SynchronizationProgressCont
     }
 
     @Override
-    public void cancel(UUID key) {
-        if(percentageControl.containsKey(key)) {
+    public boolean cancel(UUID key) {
+        boolean existsKey = percentageControl.containsKey(key);
+        if(existsKey) {
             cancellationList.add(key);
         }
+        return existsKey;
     }
 
 }
