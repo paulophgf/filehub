@@ -99,7 +99,7 @@ public class FileSystemStorage extends FhStorage<FileSystemProperties> {
         List<FileItem> fileItems = new ArrayList<>();
         for(File file : dir.listFiles()) {
             String fileName = file.isDirectory() ? file.getName() + "/" : file.getName();
-            String fsPath = (path.startsWith("/") ? pathDir.substring(1) : pathDir) + "/";
+            String fsPath = pathDir + "/";
             String mimeType = URLConnection.guessContentTypeFromName(file.getName());
             fileItems.add(new FileItem(fsPath, fileName, file.isDirectory(), mimeType, file.length()));
         }
