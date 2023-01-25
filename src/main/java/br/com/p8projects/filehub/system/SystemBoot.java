@@ -48,7 +48,7 @@ public class SystemBoot {
                 "\nVersion: " + properties.getSystemVersion() +
                 "\nStorage Reader Type: " + properties.getConfigType() +
                 "\nAPI Documentation: http://localhost:" + properties.getAppPort() + "/swagger-ui/index.html" +
-                "\nSwagger API Code: http://localhost:" + properties.getAppPort() + "/v2/api-docs";
+                "\nSwagger API Raw: http://localhost:" + properties.getAppPort() + "/v2/api-docs";
         logger.info(logo);
     }
 
