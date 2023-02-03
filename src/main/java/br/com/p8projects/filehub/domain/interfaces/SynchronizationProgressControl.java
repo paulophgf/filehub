@@ -11,9 +11,9 @@ public interface SynchronizationProgressControl {
 
     UUID start(StorageSynchronize storageSynchronize);
 
-    boolean exists(Schema schema);
+    boolean existExecutingStorage(Schema schema);
 
-    boolean exists(StorageSynchronize storageSynchronize);
+    boolean existExecutingStorage(StorageSynchronize storageSynchronize);
 
     void updateStatus(UUID key, Float value);
 

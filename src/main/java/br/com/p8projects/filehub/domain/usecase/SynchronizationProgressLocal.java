@@ -2,6 +2,7 @@ package br.com.p8projects.filehub.domain.usecase;
 
 import br.com.p8projects.filehub.domain.interfaces.SynchronizationProgressControl;
 import br.com.p8projects.filehub.domain.model.StorageSynchronize;
+import br.com.p8projects.filehub.domain.model.config.FhStorage;
 import br.com.p8projects.filehub.domain.model.config.Schema;
 import org.springframework.stereotype.Service;
 
@@ -10,15 +11,15 @@ import java.util.*;
 @Service
 public class SynchronizationProgressLocal implements SynchronizationProgressControl {
 
-    private static Map<UUID, Float> percentageControl = new HashMap<>();
-    private static Set<String> synchControl = new HashSet<>();
-    private static Set<UUID> cancellationList = new HashSet<>();
+    private final static Map<UUID, Float> percentageControl = new HashMap<>();
+    private final static Set<String> executionControl = new HashSet<>();
+    private final static Set<UUID> cancellationList = new HashSet<>();
 
 
     @Override
     public UUID start(Schema schema) {
         UUID key = UUID.randomUUID();
-        synchControl.add(schema.getId());
+        schema.getStorages().forEach(s -> executionControl.add(s.getId()));
         percentageControl.put(key, 0f);
         return key;
     }
@@ -26,22 +27,30 @@ public class SynchronizationProgressLocal implements SynchronizationProgressCont
     @Override
     public UUID start(StorageSynchronize storageSynchronize) {
         UUID key = UUID.randomUUID();
-        synchControl.add(storageSynchronize.getSource().getId() + storageSynchronize.getDestination().getId());
+        executionControl.add(storageSynchronize.getSource().getId());
+        executionControl.add(storageSynchronize.getDestination().getId());
         percentageControl.put(key, 0f);
         return key;
     }
 
 
     @Override
-    public boolean exists(Schema schema) {
-        return synchControl.contains(schema.getId());
+    public boolean existExecutingStorage(Schema schema) {
+        boolean result = false;
+        for(FhStorage storage : schema.getStorages()) {
+            result = executionControl.contains(storage.getId());
+            if(result) {
+                break;
+            }
+        }
+        return result;
     }
 
     @Override
-    public boolean exists(StorageSynchronize storageSynchronize) {
-        String key1 = storageSynchronize.getSource().getId() + storageSynchronize.getDestination().getId();
-        String key2 = storageSynchronize.getDestination().getId() + storageSynchronize.getSource().getId();
-        return synchControl.contains(key1) || synchControl.contains(key2);
+    public boolean existExecutingStorage(StorageSynchronize storageSynchronize) {
+        boolean existsSource = executionControl.contains(storageSynchronize.getSource().getId());
+        boolean existsDestination = executionControl.contains(storageSynchronize.getDestination().getId());
+        return existsSource || existsDestination;
     }
 
 

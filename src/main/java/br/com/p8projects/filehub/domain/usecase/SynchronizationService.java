@@ -1,6 +1,7 @@
 package br.com.p8projects.filehub.domain.usecase;
 
 import br.com.p8projects.filehub.domain.exceptions.NotFoundException;
+import br.com.p8projects.filehub.domain.exceptions.SynchronizationException;
 import br.com.p8projects.filehub.domain.model.StorageSynchronize;
 import br.com.p8projects.filehub.domain.model.config.Schema;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,12 +25,18 @@ public class SynchronizationService {
 
 
     public UUID start(StorageSynchronize storageSynchronize) {
+        if(synchronizationProgress.existExecutingStorage(storageSynchronize)) {
+            throw new SynchronizationException("There is a synchronization already in progress using a storage informed");
+        }
         UUID key = synchronizationProgress.start(storageSynchronize);
         synchronizationManager.synchronize(storageSynchronize);
         return key;
     }
 
     public UUID start(Schema target) {
+        if(synchronizationProgress.existExecutingStorage(target)) {
+            throw new SynchronizationException("There is a synchronization already in progress using a storage informed");
+        }
         UUID key = synchronizationProgress.start(target);
         synchronizationManager.synchronize(target);
         return key;
